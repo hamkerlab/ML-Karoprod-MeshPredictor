@@ -1,8 +1,8 @@
-
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+import ipywidgets as widgets
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -135,7 +135,7 @@ class CutPredictor(object):
         print("\nOutputs\n" + "-"*60 + "\n")
         print(self.df_Y)
 
-    def _create_model(self, layers, learning_rate, dropout):
+    def _create_model(self, config):
 
         # Clear the session
         tf.keras.backend.clear_session()
@@ -145,17 +145,17 @@ class CutPredictor(object):
         model.add(tf.keras.layers.Input(self.input_shape))
 
         # Add layers
-        for n in layers:
+        for n in config['layers']:
             model.add(tf.keras.layers.Dense(n, activation='relu'))
-            if dropout > 0.0:
-                model.add(tf.keras.layers.Dropout(dropout))
+            if config['dropout'] > 0.0:
+                model.add(tf.keras.layers.Dropout(config['dropout']))
         
         # Output layer
         model.add(tf.keras.layers.Dense(1))
 
         # Compile
         model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=config['learning_rate']),
             loss=tf.keras.losses.MeanSquaredError()
         )
 
@@ -174,8 +174,16 @@ class CutPredictor(object):
 
         dropout = trial.suggest_discrete_uniform('dropout', self.range_dropout[0], self.range_dropout[1], self.range_dropout[2])
 
+        config = {
+            'batch_size': self.batch_size,
+            'max_epochs': self.max_epochs,
+            'layers': layers,
+            'dropout': dropout,
+            'learning_rate': learning_rate
+        }
+
         # Create the model
-        model = self._create_model(layers, learning_rate, dropout)
+        model = self._create_model(config)
 
         # Train
         history = model.fit(self.X, self.target, validation_split=0.1, epochs=self.max_epochs, batch_size=self.batch_size, verbose=0)
@@ -188,6 +196,7 @@ class CutPredictor(object):
             self.best_mse = val_mse
             model.save(self.save_path)
             self.best_history = history
+            self.best_config = config
 
         return val_mse
 
@@ -207,7 +216,7 @@ class CutPredictor(object):
         :param trials: number of trials to perform.
         :param save_path: path to save the best model (default: 'best_model').
         :param batch_size: batch size to be used (default: 4096).
-        :param max_epoch: maximum number of epochs for the training of a single network (default: 20)
+        :param max_epochs: maximum number of epochs for the training of a single network (default: 20)
         :param layers: range for the number of layers (default: [3, 6]).
         :param neurons: range (and optionally step) for the number of neurons per layer (default: [64, 512, 32]). If only two values are provided, the step is assumed to be 1.
         :param dropout: range and step for the dropout level (default: [0.0, 0.5, 0.1]).
@@ -226,43 +235,64 @@ class CutPredictor(object):
         self.range_learning_rate = learning_rate
 
         # Keep the best network only
-        self.best_mse = 10000.0
+        self.best_mse = 10000000.0
         self.best_history = None
 
         # Start the study
-        study = optuna.create_study(direction='minimize')
-        study.optimize(self.trial, n_trials=trials)
+        self.study = optuna.create_study(direction='minimize')
+        self.study.optimize(self.trial, n_trials=trials)
 
         if self.best_history is None:
             print("Error: could not find a correct configuration")
-            return
+            return None
         
         # Reload the best model
         self.model = tf.keras.models.load_model(self.save_path)
 
+        return self.best_config
+
     def custom_model(self,
             save_path='best_model', 
-            batch_size=4096, 
-            max_epochs=20, 
-            layers=[128, 128, 128, 128, 128],
-            dropout=0.0,
-            learning_rate=0.005):
+            config={
+                'batch_size': 4096,
+                'max_epochs': 30,
+                'layers': [128, 128, 128, 128, 128],
+                'dropout': 0.0,
+                'learning_rate': 0.005
+            },
+            verbose=False,
+        ):
         """
         Creates and trains a single model instead of the autotuning procedure.
 
+        :param save_path: path to save the best model (default: 'best_model').
+        :param config: dictionary containing the description of the model. Must contain:
+            * batch_size: batch size to be used (default: 4096).
+            * max_epochs: maximum number of epochs for the training of a single network (default: 20)
+            * layers: list of the number of neurons in each layer (default: [128, 128, 128, 128, 128]).
+            * dropout: dropout level (default: 0.0).
+            * learning_rate: learning rate (default: [0.005]).
+        :param verbose: whether training details should be printed.
 
         """
         # Save arguments
         self.save_path = save_path
-        self.batch_size = batch_size
-        self.max_epochs = max_epochs
+        self.best_config = config
+        self.batch_size = config['batch_size']
 
         # Create the model
-        self.model = self._create_model(layers, learning_rate, dropout)
-        self.model.summary()
+        self.model = self._create_model(self.best_config)
+        if verbose:
+            self.model.summary()
 
         # Train
-        history = self.model.fit(self.X, self.target, validation_split=0.1, epochs=self.max_epochs, batch_size=self.batch_size, verbose=1)
+        history = self.model.fit(
+            self.X, self.target, 
+            validation_split=0.1, 
+            epochs=self.best_config['max_epochs'], 
+            batch_size=self.best_config['batch_size'], 
+            verbose=1 if verbose else 0
+        )
 
         # Check performance
         val_mse = history.history['val_loss'][-1]
@@ -271,6 +301,8 @@ class CutPredictor(object):
         self.best_mse = val_mse
         self.model.save(self.save_path)
         self.best_history = history
+
+        print("Validation mse:", self.best_mse)
 
 
     def training_summary(self):
@@ -308,6 +340,20 @@ class CutPredictor(object):
         plt.xlabel("Prediction")
         plt.title("Statistics")
         plt.savefig(self.save_path + "/distribution.png")
+
+    def load(self, load_path='best_model', batch_size=4096):
+        """
+        Load a pretrained network from a saved folder. The only parameter not saved by default is the batch size.
+
+        :param load_path: path to the directory where the best network was saved (default: 'best_model')
+        :param batch_size: batch size to be used (default: 4096).
+        """
+
+        self.batch_size = batch_size
+        self.save_path = load_path
+
+        self.model = tf.keras.models.load_model(self.save_path)
+
 
     def predict(self, process_parameters, nb_points):
         """
@@ -382,5 +428,42 @@ class CutPredictor(object):
         plt.legend()
 
 
+    def interactive(self):
 
+        values = {}
+
+        for attr in self.features:
+            if attr == self.position_attribute:
+                continue
+            elif attr in self.categorical_attributes:
+                values[attr] = widgets.Dropdown(
+                    options=self.categorical_values[attr],
+                    value=self.categorical_values[attr][0],
+                )
+            else:
+                values[attr] = widgets.FloatSlider(
+                        value=self.mean_values[attr],
+                        min=self.min_values[attr],
+                        max=self.max_values[attr],
+                        step=(self.max_values[attr] - self.min_values[attr])/100.,
+                )
+    
+        display(
+            widgets.interactive(self._visualize, 
+            **values
+            )
+        )
+        
+
+    def _visualize(self, **values):
+
+        x, y = self.predict(values, 100)
+
+        plt.figure()
+        plt.plot(x, y)
+        plt.xlabel(self.position_attribute)
+        plt.ylabel(self.output_attribute)
+        plt.xlim((self.min_values[self.position_attribute], self.max_values[self.position_attribute]))
+        plt.ylim((self.min_values[self.output_attribute], self.max_values[self.output_attribute]))
+        plt.show()
         

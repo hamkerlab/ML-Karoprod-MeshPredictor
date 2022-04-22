@@ -57,7 +57,6 @@ plt.figure()
 plt.plot(x, y)
 plt.xlabel('tp')
 plt.ylabel('deviationc')
-plt.legend()
 plt.savefig("prediction1.png")
 
 # Compare prediction and ground truth for a single experiment

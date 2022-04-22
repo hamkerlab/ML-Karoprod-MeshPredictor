@@ -31,9 +31,9 @@ reg.data_summary()
 
 # Start autotuning
 reg.autotune(
-    trials=10,
+    trials=100,
     max_epochs=30, 
-    layers=[4, 6],
+    layers=[3, 5],
     neurons=[64, 256, 32],
     dropout=[0.0, 0.5, 0.1],
     learning_rate=[1e-5, 1e-3]
@@ -58,10 +58,12 @@ plt.plot(x, y)
 plt.xlabel('tp')
 plt.ylabel('deviationc')
 plt.legend()
+plt.savefig("prediction1.png")
 
 # Compare prediction and ground truth for a single experiment
 id = 0
 reg.compare(id*1000, (id+1)*1000)
+plt.savefig("prediction2.png")
 
 
 plt.show()

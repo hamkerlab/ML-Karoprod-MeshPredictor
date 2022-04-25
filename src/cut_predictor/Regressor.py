@@ -28,16 +28,10 @@ def one_hot(data, values):
 
 class CutPredictor(object):
     """
-    NN-based regression method to predict 1D cuts.
-
-    Learns a function of the type:
-
-    $$y = f(x; \theta)$$
-
-    where $x$ is a position, $y$ a scalar to be predicted and $\theta$ are process parameters.
+    Regression method to predict 1D cuts from process parameters.
     """
 
-    def __init__(self, data, process_parameters, position, output, categorical=[], sep=','):
+    def __init__(self, data, process_parameters, position, output, categorical=[], angle=False):
         """
         Loads a pandas Dataframe containing the data and preprocesses it.
 
@@ -45,7 +39,7 @@ class CutPredictor(object):
         :param process_parameters: list of process parameters. The names must match the columns of the csv file.
         :param position: position variable. The name must match one column of the csv file.
         :param output: output variable to be predicted. The name must match one column of the csv file.
-        :param sep: separator to be used when reading the csv file. Default is ','.
+        :param angle: if the position parameter is an angle, its sine and cosine are used as inputs instead.
         """
 
         self.model = None
@@ -55,6 +49,7 @@ class CutPredictor(object):
         self.position_attribute = position
         self.output_attribute = output
         self.categorical_attributes = categorical
+        self.angle_input = angle
 
         # Extract relevant data
         self.features = self.process_parameters + [self.position_attribute]
@@ -75,6 +70,7 @@ class CutPredictor(object):
             self.max_values[attr] = maxs[attr]
             self.mean_values[attr] = means[attr]
             self.std_values[attr] = stds[attr]
+
         self.min_values[self.output_attribute] = self.df_Y.min(axis=0)
         self.max_values[self.output_attribute] = self.df_Y.max(axis=0)
         self.mean_values[self.output_attribute] = self.df_Y.mean(axis=0)
@@ -101,6 +97,17 @@ class CutPredictor(object):
         X = np.empty((N, 0))
 
         for idx, attr in enumerate(self.features):
+            if attr == self.position_attribute:
+                if not self.angle_input:
+
+                    X = np.concatenate(
+                    (X, ((self.X[:, idx] - self.mean_values[attr] ) / self.std_values[attr]).reshape((N, 1)) ), 
+                    axis=1)
+
+                else:
+                    angle = self.X[:, idx]
+                    X = np.concatenate((X, np.cos(angle).reshape((N, 1)), np.sin(angle).reshape((N, 1)) ), axis=1)
+
             if attr in self.categorical_attributes:
 
                 X = np.concatenate((X, one_hot(self.X[:, idx], self.categorical_values[attr]) ), axis=1)
@@ -113,7 +120,18 @@ class CutPredictor(object):
 
         self.X = X
 
-    def data_summary(self, plots=True):
+        # Normalize output
+        self.target = (self.target - self.min_values[self.output_attribute])/(self.max_values[self.output_attribute] - self.min_values[self.output_attribute])
+
+    def _rescale_output(self, y):
+        "Rescales the output"
+
+        return self.min_values[self.output_attribute] + (self.max_values[self.output_attribute] - self.min_values[self.output_attribute]) * y
+
+    def data_summary(self):
+        """
+        Displays a summary of the loaded data.
+        """
 
         print("Data summary\n" + "-"*60 + "\n")
 
@@ -124,7 +142,10 @@ class CutPredictor(object):
             else:
                 print("\t-", param, ": numerical [", self.min_values[param], " ... ", self.max_values[param], "]")
 
-        print("Position variable:")
+        if self.angle_input:
+            print("Angle variable:")
+        else:
+            print("Position variable:")
         print("\t-", self.position_attribute, ": numerical,", "[", self.min_values[self.position_attribute], "/", self.max_values[self.position_attribute], "]")
 
         print("Output variable:")
@@ -265,14 +286,19 @@ class CutPredictor(object):
         """
         Creates and trains a single model instead of the autotuning procedure.
 
+
+        The dictionary describing the structure of the network must contain the following fields:
+        
+        * batch_size: batch size to be used (default: 4096).
+        * max_epochs: maximum number of epochs for the training of a single network (default: 20)
+        * layers: list of the number of neurons in each layer (default: [128, 128, 128, 128, 128]).
+        * dropout: dropout level (default: 0.0).
+        * learning_rate: learning rate (default: [0.005]).
+
         :param save_path: path to save the best model (default: 'best_model').
-        :param config: dictionary containing the description of the model. Must contain:
-            * batch_size: batch size to be used (default: 4096).
-            * max_epochs: maximum number of epochs for the training of a single network (default: 20)
-            * layers: list of the number of neurons in each layer (default: [128, 128, 128, 128, 128]).
-            * dropout: dropout level (default: 0.0).
-            * learning_rate: learning rate (default: [0.005]).
+        :param config: dictionary containing the description of the model.
         :param verbose: whether training details should be printed.
+
 
         """
         # Save arguments
@@ -325,7 +351,7 @@ class CutPredictor(object):
         y = self.model.predict(self.X, batch_size=self.batch_size)
 
         plt.figure()
-        plt.scatter(self.target, y, s=1)
+        plt.scatter(self._rescale_output(self.target), self._rescale_output(y), s=1)
         plt.xlabel("Ground truth")
         plt.ylabel("Prediction")
         plt.title("Ground truth vs. prediction")
@@ -333,10 +359,10 @@ class CutPredictor(object):
 
         plt.figure()
         plt.subplot(121)
-        plt.hist(self.target)
+        plt.hist(self._rescale_output(self.target))
         plt.xlabel("Ground truth")
         plt.subplot(122)
-        plt.hist(y)
+        plt.hist(self._rescale_output(y))
         plt.xlabel("Prediction")
         plt.title("Statistics")
         plt.savefig(self.save_path + "/distribution.png")
@@ -376,9 +402,19 @@ class CutPredictor(object):
 
             if attr == self.position_attribute:
 
-                values = (position.reshape((nb_points, 1)) - self.mean_values[attr] ) / self.std_values[attr]
+                if not self.angle_input:
 
-                X = np.concatenate((X, values), axis=1)
+                    values = (position.reshape((nb_points, 1)) - self.mean_values[attr] ) / self.std_values[attr]
+                    X = np.concatenate((X, values), axis=1)
+
+                else:
+
+                    X = np.concatenate(
+                        (X, np.cos(position).reshape((nb_points, 1)), np.sin(position).reshape((nb_points, 1)) ), 
+                        axis=1
+                    )
+
+                
      
             elif attr in self.categorical_attributes:
                 
@@ -395,6 +431,8 @@ class CutPredictor(object):
                 X = np.concatenate((X, val ), axis=1)
 
         y = self.model.predict(X, batch_size=self.batch_size)
+
+        y = self._rescale_output(y)
 
         return position, y
 
@@ -414,11 +452,12 @@ class CutPredictor(object):
             return
 
         X = self.X[start:stop]
-        t = self.target[start:stop]
+        t = self._rescale_output(self.target[start:stop])
 
         position = self.mean_values[self.position_attribute] +  self.std_values[self.position_attribute] * X[:, -1] # position is the last index
 
         y = self.model.predict(X, batch_size=self.batch_size)
+        y = self._rescale_output(y)
 
         plt.figure()
         plt.plot(position, y, label="prediction")
@@ -429,6 +468,17 @@ class CutPredictor(object):
 
 
     def interactive(self):
+        """
+        Method to interactively vary the process parameters and predict the corresponding cut. 
+
+        Only work in a Jupyter notebook. 
+
+        ```python
+        %matplotlib inline
+        plt.rcParams['figure.dpi'] = 150
+        reg.interactive()
+        ```
+        """
 
         values = {}
 

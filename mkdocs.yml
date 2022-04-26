@@ -47,6 +47,11 @@ extra_javascript:
 
 
 nav:
-  - Home: 'index.md'
+  - Installation: 'index.md'
+  - 'datapreparation.md'
   - API:
     - 'CutPredictor.md'
+  - Examples:
+    - 'Cut_x0.ipynb'
+    - 'Cut_web.ipynb'
+    - 'Cut_flange.ipynb'

@@ -1,5 +1,7 @@
 # Cut Predictor
 
+Tensorflow and optuna-based utility to learn to predict deviations from 1D position (or angles) based on a set of process parameters.
+
 
 ## Installation
 

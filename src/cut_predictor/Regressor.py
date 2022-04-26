@@ -97,18 +97,25 @@ class CutPredictor(object):
         X = np.empty((N, 0))
 
         for idx, attr in enumerate(self.features):
+
             if attr == self.position_attribute:
+
                 if not self.angle_input:
 
+                    values = ((self.X[:, idx] - self.mean_values[attr] ) / self.std_values[attr]).reshape((N, 1))
+
                     X = np.concatenate(
-                    (X, ((self.X[:, idx] - self.mean_values[attr] ) / self.std_values[attr]).reshape((N, 1)) ), 
-                    axis=1)
+                        (X, values ), 
+                        axis=1
+                    )
 
                 else:
-                    angle = self.X[:, idx]
-                    X = np.concatenate((X, np.cos(angle).reshape((N, 1)), np.sin(angle).reshape((N, 1)) ), axis=1)
 
-            if attr in self.categorical_attributes:
+                    angle = self.X[:, idx]
+                    X = np.concatenate((X, np.cos(angle).reshape((N, 1)) ), axis=1)
+                    X = np.concatenate((X, np.sin(angle).reshape((N, 1)) ), axis=1)
+
+            elif attr in self.categorical_attributes:
 
                 X = np.concatenate((X, one_hot(self.X[:, idx], self.categorical_values[attr]) ), axis=1)
 
@@ -123,8 +130,8 @@ class CutPredictor(object):
         # Normalize output
         self.target = (self.target - self.min_values[self.output_attribute])/(self.max_values[self.output_attribute] - self.min_values[self.output_attribute])
 
+    # Rescales the output
     def _rescale_output(self, y):
-        "Rescales the output"
 
         return self.min_values[self.output_attribute] + (self.max_values[self.output_attribute] - self.min_values[self.output_attribute]) * y
 
@@ -152,9 +159,9 @@ class CutPredictor(object):
         print("\t-", self.output_attribute, ": numerical,", "[", self.min_values[self.output_attribute], "/", self.max_values[self.output_attribute], "]")
 
         print("\nInputs\n" + "-"*60 + "\n")
-        print(self.df_X)
+        print(self.X.shape)
         print("\nOutputs\n" + "-"*60 + "\n")
-        print(self.df_Y)
+        print(self.target.shape)
 
     def _create_model(self, config):
 
@@ -399,7 +406,6 @@ class CutPredictor(object):
 
         for idx, attr in enumerate(self.features):
 
-
             if attr == self.position_attribute:
 
                 if not self.angle_input:
@@ -410,12 +416,14 @@ class CutPredictor(object):
                 else:
 
                     X = np.concatenate(
-                        (X, np.cos(position).reshape((nb_points, 1)), np.sin(position).reshape((nb_points, 1)) ), 
+                        (X, np.cos(position).reshape((nb_points, 1)) ), 
+                        axis=1
+                    )
+                    X = np.concatenate(
+                        (X, np.sin(position).reshape((nb_points, 1)) ), 
                         axis=1
                     )
 
-                
-     
             elif attr in self.categorical_attributes:
                 
 
@@ -429,6 +437,7 @@ class CutPredictor(object):
                 val = ((process_parameters[attr] - self.mean_values[attr] ) / self.std_values[attr]) * np.ones((nb_points, 1))
 
                 X = np.concatenate((X, val ), axis=1)
+
 
         y = self.model.predict(X, batch_size=self.batch_size)
 
@@ -464,6 +473,7 @@ class CutPredictor(object):
         plt.plot(position, t, label="data")
         plt.xlabel(self.position_attribute)
         plt.ylabel(self.output_attribute)
+        plt.ylim((self.min_values[self.output_attribute], self.max_values[self.output_attribute]))
         plt.legend()
 
 

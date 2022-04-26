@@ -1,5 +1,9 @@
 # Cut predictor
 
+Tensorflow and optuna-based utility to learn to predict deviations from 1D position (or angles) based on a set of process parameters.
+
+The documentation is at <https://hamkerlab.github.io/ML-Karoprod-CutPredictor/>. 
+
 ## Installation
 
 Dependencies:
@@ -15,11 +19,8 @@ Dependencies:
 pip install git+https://github.com/hamkerlab/ML-Karoprod-CutPredictor.git@master
 ```
 
-
-
 ## Documentation
 
-The documentation is at <https://hamkerlab.github.io/ML-Karoprod-CutPredictor/>. 
 
 To generate the documentation, you will need:
 

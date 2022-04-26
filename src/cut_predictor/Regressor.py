@@ -342,7 +342,7 @@ class CutPredictor(object):
         """
         Creates various plots related to the best network. 
         
-        Can only be called after ``autotune()`` or ``custom_model``. You need to call `plt.show()` if you are in a script.
+        Can only be called after ``autotune()`` or ``custom_model``. You need to finally call `plt.show()` if you are in a script.
         """
 
         # Training performance

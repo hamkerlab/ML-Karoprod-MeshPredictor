@@ -49,6 +49,7 @@ extra_javascript:
 nav:
   - Installation: 'index.md'
   - 'datapreparation.md'
+  - 'usage.md'
   - API:
     - 'CutPredictor.md'
   - Examples:

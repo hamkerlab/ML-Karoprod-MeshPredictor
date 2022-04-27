@@ -3,19 +3,13 @@ import os
 import streamlit as st
 import pandas as pd
 import numpy as np
-import dynapy
-from dynapy.workflow.experiments.ut import UT, TensionTest, get_specimen, specimens
-import dynapy.workflow.experiments.ut
 
 modulepath = os.path.dirname(__file__)
-import sdata_experiments
-import sdata
 import copy
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import RendererAgg
 
 _lock = RendererAgg.lock
-import dynapy.mech.hardening as hardening
 
 st.set_page_config(
     page_title="ML@KaroProd - x0cut",

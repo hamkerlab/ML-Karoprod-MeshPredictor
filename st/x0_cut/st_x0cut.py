@@ -132,7 +132,7 @@ with _lock:
     for oldplotdata in st.session_state['plot_hist']:
         ax.plot(oldplotdata.df.x, oldplotdata.df.y, label=oldplotdata.label, alpha=.7, lw=1.5)#, color=oldplotdata.color)
 
-    p, = ax.plot(plotdata.df.x,plotdata.df.y, label=plotdata.label, alpha=.8, lw=2)
+    p, = ax.plot(plotdata.df.x, plotdata.df.y, label=plotdata.label, alpha=.8, lw=2)
     color = p.get_color()
     plotdata.color=color
 
@@ -142,6 +142,7 @@ with _lock:
     ax.legend(loc="best")
     st.write(fig)
     st.session_state['plot_hist'].append(plotdata)
+    st.session_state['plot_hist'] = st.session_state['plot_hist'][-3:]
 
 
 

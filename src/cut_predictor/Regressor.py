@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import ipywidgets as widgets
 
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import optuna
-
 
 
 def one_hot(data, values):
@@ -25,6 +25,7 @@ def one_hot(data, values):
         res[i, idx] = 1.0
 
     return res
+
 
 class CutPredictor(object):
     """
@@ -88,8 +89,7 @@ class CutPredictor(object):
         # Normalizing input data
         self._input_normalization()
 
-        self.input_shape = (self.X.shape[1], )
-
+        self.input_shape = (self.X.shape[1],)
 
     def _input_normalization(self):
 
@@ -102,50 +102,52 @@ class CutPredictor(object):
 
                 if not self.angle_input:
 
-                    values = ((self.X[:, idx] - self.mean_values[attr] ) / self.std_values[attr]).reshape((N, 1))
+                    values = ((self.X[:, idx] - self.mean_values[attr]) / self.std_values[attr]).reshape((N, 1))
 
                     X = np.concatenate(
-                        (X, values ), 
+                        (X, values),
                         axis=1
                     )
 
                 else:
 
                     angle = self.X[:, idx]
-                    X = np.concatenate((X, np.cos(angle).reshape((N, 1)) ), axis=1)
-                    X = np.concatenate((X, np.sin(angle).reshape((N, 1)) ), axis=1)
+                    X = np.concatenate((X, np.cos(angle).reshape((N, 1))), axis=1)
+                    X = np.concatenate((X, np.sin(angle).reshape((N, 1))), axis=1)
 
             elif attr in self.categorical_attributes:
 
-                X = np.concatenate((X, one_hot(self.X[:, idx], self.categorical_values[attr]) ), axis=1)
+                X = np.concatenate((X, one_hot(self.X[:, idx], self.categorical_values[attr])), axis=1)
 
             else:
 
                 X = np.concatenate(
-                    (X, ((self.X[:, idx] - self.mean_values[attr] ) / self.std_values[attr]).reshape((N, 1)) ), 
+                    (X, ((self.X[:, idx] - self.mean_values[attr]) / self.std_values[attr]).reshape((N, 1))),
                     axis=1)
 
         self.X = X
 
         # Normalize output
-        self.target = (self.target - self.min_values[self.output_attribute])/(self.max_values[self.output_attribute] - self.min_values[self.output_attribute])
+        self.target = (self.target - self.min_values[self.output_attribute]) / (
+                    self.max_values[self.output_attribute] - self.min_values[self.output_attribute])
 
     # Rescales the output
     def _rescale_output(self, y):
 
-        return self.min_values[self.output_attribute] + (self.max_values[self.output_attribute] - self.min_values[self.output_attribute]) * y
+        return self.min_values[self.output_attribute] + (
+                    self.max_values[self.output_attribute] - self.min_values[self.output_attribute]) * y
 
     def data_summary(self):
         """
         Displays a summary of the loaded data.
         """
 
-        print("Data summary\n" + "-"*60 + "\n")
+        print("Data summary\n" + "-" * 60 + "\n")
 
         print("Process parameters:")
         for param in self.process_parameters:
             if param in self.categorical_attributes:
-                print("\t-", param, ": categorical " + str(self.categorical_values[param]) )
+                print("\t-", param, ": categorical " + str(self.categorical_values[param]))
             else:
                 print("\t-", param, ": numerical [", self.min_values[param], " ... ", self.max_values[param], "]")
 
@@ -153,21 +155,23 @@ class CutPredictor(object):
             print("Angle variable:")
         else:
             print("Position variable:")
-        print("\t-", self.position_attribute, ": numerical,", "[", self.min_values[self.position_attribute], "/", self.max_values[self.position_attribute], "]")
+        print("\t-", self.position_attribute, ": numerical,", "[", self.min_values[self.position_attribute], "/",
+              self.max_values[self.position_attribute], "]")
 
         print("Output variable:")
-        print("\t-", self.output_attribute, ": numerical,", "[", self.min_values[self.output_attribute], "/", self.max_values[self.output_attribute], "]")
+        print("\t-", self.output_attribute, ": numerical,", "[", self.min_values[self.output_attribute], "/",
+              self.max_values[self.output_attribute], "]")
 
-        print("\nInputs\n" + "-"*60 + "\n")
+        print("\nInputs\n" + "-" * 60 + "\n")
         print(self.X.shape)
-        print("\nOutputs\n" + "-"*60 + "\n")
+        print("\nOutputs\n" + "-" * 60 + "\n")
         print(self.target.shape)
 
     def _create_model(self, config):
 
         # Clear the session
         tf.keras.backend.clear_session()
-     
+
         # Create the model
         model = tf.keras.Sequential()
         model.add(tf.keras.layers.Input(self.input_shape))
@@ -177,7 +181,7 @@ class CutPredictor(object):
             model.add(tf.keras.layers.Dense(n, activation='relu'))
             if config['dropout'] > 0.0:
                 model.add(tf.keras.layers.Dropout(config['dropout']))
-        
+
         # Output layer
         model.add(tf.keras.layers.Dense(1))
 
@@ -195,12 +199,15 @@ class CutPredictor(object):
         layers = []
         nb_layers = trial.suggest_int('nb_layers', self.range_layers[0], self.range_layers[1])
         for n in range(nb_layers):
-            num_hidden = trial.suggest_int(f'n_units_l{n}', self.range_neurons[0], self.range_neurons[1], step=self.range_neurons[2])
+            num_hidden = trial.suggest_int(f'n_units_l{n}', self.range_neurons[0], self.range_neurons[1],
+                                           step=self.range_neurons[2])
             layers.append(num_hidden)
 
-        learning_rate = trial.suggest_loguniform('learning_rate', self.range_learning_rate[0], self.range_learning_rate[1])
+        learning_rate = trial.suggest_loguniform('learning_rate', self.range_learning_rate[0],
+                                                 self.range_learning_rate[1])
 
-        dropout = trial.suggest_discrete_uniform('dropout', self.range_dropout[0], self.range_dropout[1], self.range_dropout[2])
+        dropout = trial.suggest_discrete_uniform('dropout', self.range_dropout[0], self.range_dropout[1],
+                                                 self.range_dropout[2])
 
         config = {
             'batch_size': self.batch_size,
@@ -214,7 +221,8 @@ class CutPredictor(object):
         model = self._create_model(config)
 
         # Train
-        history = model.fit(self.X, self.target, validation_split=0.1, epochs=self.max_epochs, batch_size=self.batch_size, verbose=0)
+        history = model.fit(self.X, self.target, validation_split=0.1, epochs=self.max_epochs,
+                            batch_size=self.batch_size, verbose=0)
 
         # Check performance
         val_mse = history.history['val_loss'][-1]
@@ -228,16 +236,16 @@ class CutPredictor(object):
 
         return val_mse
 
-    def autotune(self, 
-            trials, 
-            save_path='best_model', 
-            batch_size=4096, 
-            max_epochs=20, 
-            layers=[3, 6],
-            neurons=[64, 512, 32],
-            dropout=[0.0, 0.5, 0.1],
-            learning_rate=[1e-6, 1e-3]
-        ):
+    def autotune(self,
+                 trials,
+                 save_path='best_model',
+                 batch_size=4096,
+                 max_epochs=20,
+                 layers=[3, 6],
+                 neurons=[64, 512, 32],
+                 dropout=[0.0, 0.5, 0.1],
+                 learning_rate=[1e-6, 1e-3]
+                 ):
         """
         Searches for the optimal network configuration for the data.
 
@@ -273,23 +281,23 @@ class CutPredictor(object):
         if self.best_history is None:
             print("Error: could not find a correct configuration")
             return None
-        
+
         # Reload the best model
         self.model = tf.keras.models.load_model(self.save_path)
 
         return self.best_config
 
     def custom_model(self,
-            save_path='best_model', 
-            config={
-                'batch_size': 4096,
-                'max_epochs': 30,
-                'layers': [128, 128, 128, 128, 128],
-                'dropout': 0.0,
-                'learning_rate': 0.005
-            },
-            verbose=False,
-        ):
+                     save_path='best_model',
+                     config={
+                         'batch_size': 4096,
+                         'max_epochs': 30,
+                         'layers': [128, 128, 128, 128, 128],
+                         'dropout': 0.0,
+                         'learning_rate': 0.005
+                     },
+                     verbose=False,
+                     ):
         """
         Creates and trains a single model instead of the autotuning procedure.
 
@@ -320,10 +328,10 @@ class CutPredictor(object):
 
         # Train
         history = self.model.fit(
-            self.X, self.target, 
-            validation_split=0.1, 
-            epochs=self.best_config['max_epochs'], 
-            batch_size=self.best_config['batch_size'], 
+            self.X, self.target,
+            validation_split=0.1,
+            epochs=self.best_config['max_epochs'],
+            batch_size=self.best_config['batch_size'],
             verbose=1 if verbose else 0
         )
 
@@ -336,7 +344,6 @@ class CutPredictor(object):
         self.best_history = history
 
         print("Validation mse:", self.best_mse)
-
 
     def training_summary(self):
         """
@@ -387,7 +394,6 @@ class CutPredictor(object):
 
         self.model = tf.keras.models.load_model(self.save_path)
 
-
     def predict(self, process_parameters, nb_points):
         """
         Predicts the output variable for a given number of input positions (uniformly distributed between the min/max values used for training).
@@ -400,7 +406,8 @@ class CutPredictor(object):
             print("Error: no model has been trained yet.")
             return
 
-        position = np.linspace(self.min_values[self.position_attribute], self.max_values[self.position_attribute], nb_points)
+        position = np.linspace(self.min_values[self.position_attribute], self.max_values[self.position_attribute],
+                               nb_points)
 
         X = np.empty((nb_points, 0))
 
@@ -410,41 +417,39 @@ class CutPredictor(object):
 
                 if not self.angle_input:
 
-                    values = (position.reshape((nb_points, 1)) - self.mean_values[attr] ) / self.std_values[attr]
+                    values = (position.reshape((nb_points, 1)) - self.mean_values[attr]) / self.std_values[attr]
                     X = np.concatenate((X, values), axis=1)
 
                 else:
 
                     X = np.concatenate(
-                        (X, np.cos(position).reshape((nb_points, 1)) ), 
+                        (X, np.cos(position).reshape((nb_points, 1))),
                         axis=1
                     )
                     X = np.concatenate(
-                        (X, np.sin(position).reshape((nb_points, 1)) ), 
+                        (X, np.sin(position).reshape((nb_points, 1))),
                         axis=1
                     )
 
             elif attr in self.categorical_attributes:
-                
 
                 code = one_hot([process_parameters[attr]], self.categorical_values[attr])
                 code = np.repeat(code, nb_points, axis=0)
-                
+
                 X = np.concatenate((X, code), axis=1)
 
             else:
 
-                val = ((process_parameters[attr] - self.mean_values[attr] ) / self.std_values[attr]) * np.ones((nb_points, 1))
+                val = ((process_parameters[attr] - self.mean_values[attr]) / self.std_values[attr]) * np.ones(
+                    (nb_points, 1))
 
-                X = np.concatenate((X, val ), axis=1)
-
+                X = np.concatenate((X, val), axis=1)
 
         y = self.model.predict(X, batch_size=self.batch_size)
 
         y = self._rescale_output(y)
 
         return position, y
-
 
     def compare(self, start, stop):
         """
@@ -463,19 +468,78 @@ class CutPredictor(object):
         X = self.X[start:stop]
         t = self._rescale_output(self.target[start:stop])
 
-        position = self.mean_values[self.position_attribute] +  self.std_values[self.position_attribute] * X[:, -1] # position is the last index
+        position = self.mean_values[self.position_attribute] + self.std_values[self.position_attribute] * X[:,
+                                                                                                          -1]  # position is the last index
 
         y = self.model.predict(X, batch_size=self.batch_size)
         y = self._rescale_output(y)
 
-        plt.figure()
-        plt.plot(position, y, label="prediction")
-        plt.plot(position, t, label="data")
-        plt.xlabel(self.position_attribute)
-        plt.ylabel(self.output_attribute)
-        plt.ylim((self.min_values[self.output_attribute], self.max_values[self.output_attribute]))
-        plt.legend()
+        fig, ax = plt.subplots(1, 1, figsize=(14, 5))
+        ax.set_title(self.output_attribute)
+        ax.plot(position, y, label="prediction")
+        ax.plot(position, t, label="data")
+        ax.set_xlabel(self.position_attribute)
+        ax.set_ylabel(self.output_attribute)
+        ax.set_ylim((self.min_values[self.output_attribute], self.max_values[self.output_attribute]))
+        ax.axhline(0, c="k", lw=0.5)
 
+        ax.legend()
+
+    def compare_shape(self, start, stop, shape):
+        """
+        Compares the prediction and the ground truth for the data points if indices comprised between start and stop.
+
+        Creates a matplotlib figure.
+
+        :param start: start index (included).
+        :param stop: stop index (excluded).
+        """
+
+        if self.model is None:
+            print("Error: no model has been trained yet.")
+            return
+
+        X = self.X[start:stop]
+        t = self._rescale_output(self.target[start:stop])
+
+        position = self.mean_values[self.position_attribute] + self.std_values[self.position_attribute] * X[:,
+                                                                                                          -1]  # position is the last index
+
+        y = self.model.predict(X, batch_size=self.batch_size)
+        y = self._rescale_output(y)
+
+        res = shape.copy()
+        res["prediction"] = np.interp(res.tp, position.ravel(), y.ravel())
+        res["xr"] = res.x + res.nx * res.prediction
+        res["yr"] = res.y + res.ny * res.prediction
+        res["zr"] = res.z + res.nz * res.prediction
+
+        rest = shape.copy()
+        rest["prediction"] = np.interp(res.tp, position.ravel(), t.ravel())
+        rest["xr"] = rest.x + rest.nx * rest.prediction
+        rest["yr"] = rest.y + rest.ny * rest.prediction
+        rest["zr"] = rest.z + rest.nz * rest.prediction
+
+        fig, (ax, axc) = plt.subplots(1, 2, figsize=(14, 5))
+        ax.set_title(self.output_attribute)
+        ax.plot(position, y, label="prediction", alpha=.8, lw=2)
+        ax.plot(position, t, label="data", alpha=.8, lw=2, ls="--")
+        ax.set_xlabel(self.position_attribute)
+        ax.set_ylabel(self.output_attribute)
+        ax.set_ylim((self.min_values[self.output_attribute], self.max_values[self.output_attribute]))
+        ax.axhline(0, c="m", lw=0.5, label="reference")
+
+        ax.legend()
+
+        p, = axc.plot(res.yr, res.zr, label="prediction", alpha=.8, lw=2)
+        p, = axc.plot(rest.yr, rest.zr, label="data", alpha=.8, lw=2, ls="--")
+        p, = axc.plot(res.y, res.z, label="reference", alpha=.5, lw=.5, c="m")
+
+        axc.legend(loc="best")
+        axc.set_xlabel("y")
+        axc.set_ylabel("z")
+        axc.set_aspect("equal", "datalim")
+        return fig
 
     def interactive(self):
         """
@@ -502,18 +566,17 @@ class CutPredictor(object):
                 )
             else:
                 values[attr] = widgets.FloatSlider(
-                        value=self.mean_values[attr],
-                        min=self.min_values[attr],
-                        max=self.max_values[attr],
-                        step=(self.max_values[attr] - self.min_values[attr])/100.,
+                    value=self.mean_values[attr],
+                    min=self.min_values[attr],
+                    max=self.max_values[attr],
+                    step=(self.max_values[attr] - self.min_values[attr]) / 100.,
                 )
-    
+
         display(
-            widgets.interactive(self._visualize, 
-            **values
-            )
+            widgets.interactive(self._visualize,
+                                **values
+                                )
         )
-        
 
     def _visualize(self, **values):
 
@@ -526,4 +589,3 @@ class CutPredictor(object):
         plt.xlim((self.min_values[self.position_attribute], self.max_values[self.position_attribute]))
         plt.ylim((self.min_values[self.output_attribute], self.max_values[self.output_attribute]))
         plt.show()
-        

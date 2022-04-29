@@ -36,21 +36,21 @@ st.sidebar.markdown("## Options")
 
 if 'training_data' not in st.session_state or st.session_state.training_data is None:
     # Load the data using pandas
-    st.write('training_data' not in st.session_state, st.session_state.training_data is None)
+    #st.write('training_data' not in st.session_state, st.session_state.training_data is None)
     training_data = pd.read_csv(os.path.join(MODULEPATH, 'models', 'cut_x0.csv'))
     training_data = training_data.head(-1000)  # remove last experiment
-    st.dataframe(training_data.head(2))
+    #st.dataframe(training_data.head(2))
     st.session_state.training_data = training_data
 else:
     training_data = st.session_state.training_data
 
 if 'doe' not in st.session_state or st.session_state.doe is None:
     # Load the data using pandas
-    st.write('doe' not in st.session_state, st.session_state.doe is None)
+    #st.write('doe' not in st.session_state, st.session_state.doe is None)
     doe = pd.read_csv(os.path.join(MODULEPATH, 'models', 'doe.csv'))
     doe["Niederhalterkraft"] = doe.Niederhalterkraft.astype(float)
     #doe = doe.head(-1000)  # remove last experiment
-    st.dataframe(doe.head(2))
+    #st.dataframe(doe.head(2))
     st.session_state.doe = doe
 else:
     doe = st.session_state.doe

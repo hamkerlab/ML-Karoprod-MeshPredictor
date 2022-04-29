@@ -451,6 +451,35 @@ class CutPredictor(object):
 
         return position, y
 
+    def get_ground_truth_prediction(self, start, stop):
+        """
+        Compares the prediction and the ground truth for the data points if indices comprised between start and stop.
+
+        Creates a matplotlib figure.
+
+        :param start: start index (included).
+        :param stop: stop index (excluded).
+        """
+
+        if self.model is None:
+            print("Error: no model has been trained yet.")
+            return
+
+        X = self.X[start:stop]
+        t = self._rescale_output(self.target[start:stop])
+
+        position = self.mean_values[self.position_attribute] + self.std_values[self.position_attribute] * X[:,
+                                                                                                          -1]  # position is the last index
+
+        y = self.model.predict(X, batch_size=self.batch_size)
+        y = self._rescale_output(y)
+
+        df = pd.DataFrame({"pos": position.ravel(), "y": y.ravel(), "t": t.ravel()})
+        df["abs_error"] = df.y - df.t
+        max_t =  abs(df.t).max() + 1e-20
+        df["rel_error"] = (df.y - df.t) / max_t
+        return df
+
     def compare(self, start, stop):
         """
         Compares the prediction and the ground truth for the data points if indices comprised between start and stop.
@@ -484,6 +513,8 @@ class CutPredictor(object):
         ax.axhline(0, c="k", lw=0.5)
 
         ax.legend()
+        fig.tight_layout()
+        return fig
 
     def compare_shape(self, start, stop, shape):
         """
@@ -520,7 +551,7 @@ class CutPredictor(object):
         rest["yr"] = rest.y + rest.ny * rest.prediction
         rest["zr"] = rest.z + rest.nz * rest.prediction
 
-        fig, (ax, axc) = plt.subplots(1, 2, figsize=(14, 5))
+        fig, (ax, axc,  axd) = plt.subplots(3, 1, figsize=(14, 10), dpi=90)
         ax.set_title(self.output_attribute)
         ax.plot(position, y, label="prediction", alpha=.8, lw=2)
         ax.plot(position, t, label="data", alpha=.8, lw=2, ls="--")
@@ -539,6 +570,13 @@ class CutPredictor(object):
         axc.set_xlabel("y")
         axc.set_ylabel("z")
         axc.set_aspect("equal", "datalim")
+
+        axd.set_title(self.output_attribute)
+        axd.plot(position, y.ravel()-t.ravel(), label="abs precicion of prediction", alpha=.8, lw=2)
+        axd.axhline(0, c="k", lw=0.5)
+        axd.set_xlabel(self.position_attribute)
+        axd.set_ylabel("rel error [mm]")
+        fig.tight_layout()
         return fig
 
     def interactive(self):

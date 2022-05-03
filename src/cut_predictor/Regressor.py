@@ -26,6 +26,93 @@ def one_hot(data, values):
 
     return res
 
+class CutPredictorMin(object):
+    """
+    Regression method to predict 1D cuts from process parameters.
+    """
+
+    def __init__(self):
+        """
+        Loads a pandas Dataframe containing the data and preprocesses it.
+
+        :param data: pandas.Dataframe object.
+        :param process_parameters: list of process parameters. The names must match the columns of the csv file.
+        :param position: position variable. The name must match one column of the csv file.
+        :param output: output variable to be predicted. The name must match one column of the csv file.
+        :param angle: if the position parameter is an angle, its sine and cosine are used as inputs instead.
+        """
+
+        self.model = None
+
+    def load(self, load_path='best_model', batch_size=4096):
+        """
+        Load a pretrained network from a saved folder. The only parameter not saved by default is the batch size.
+
+        :param load_path: path to the directory where the best network was saved (default: 'best_model')
+        :param batch_size: batch size to be used (default: 4096).
+        """
+
+        self.batch_size = batch_size
+        self.save_path = load_path
+
+        self.model = tf.keras.models.load_model(self.save_path)
+
+    def predict(self, position, process_parameters):
+        """
+        Predicts the output variable for a given number of input positions (uniformly distributed between the min/max values used for training).
+
+        :param process_parameters: dictionary containing the value of all process parameters.
+        :param nb_points: number of input positions to be used for the prediction.
+        """
+
+        if self.model is None:
+            print("Error: no model has been trained yet.")
+            return
+
+        # position = np.linspace(self.min_values[self.position_attribute], self.max_values[self.position_attribute],
+        #                        nb_points)
+
+        # X = np.empty((nb_points, 0))
+        #
+        # for idx, attr in enumerate(self.features):
+        #
+        #     if attr == self.position_attribute:
+        #
+        #         if not self.angle_input:
+        #
+        #             values = (position.reshape((nb_points, 1)) - self.mean_values[attr]) / self.std_values[attr]
+        #             X = np.concatenate((X, values), axis=1)
+        #
+        #         else:
+        #
+        #             X = np.concatenate(
+        #                 (X, np.cos(position).reshape((nb_points, 1))),
+        #                 axis=1
+        #             )
+        #             X = np.concatenate(
+        #                 (X, np.sin(position).reshape((nb_points, 1))),
+        #                 axis=1
+        #             )
+        #
+        #     elif attr in self.categorical_attributes:
+        #
+        #         code = one_hot([process_parameters[attr]], self.categorical_values[attr])
+        #         code = np.repeat(code, nb_points, axis=0)
+        #
+        #         X = np.concatenate((X, code), axis=1)
+        #
+        #     else:
+        #
+        #         val = ((process_parameters[attr] - self.mean_values[attr]) / self.std_values[attr]) * np.ones(
+        #             (nb_points, 1))
+        #
+        #         X = np.concatenate((X, val), axis=1)
+
+        y = self.model.predict(X, batch_size=self.batch_size)
+
+        y = self._rescale_output(y)
+
+        return position, y
 
 class CutPredictor(object):
     """

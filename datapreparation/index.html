@@ -422,14 +422,14 @@
 
 
 <h1 id="data-preparation">Data preparation<a class="headerlink" href="#data-preparation" title="Permanent link">#</a></h1>
-<p>The data should be passed to the CutPredictor as a pandas Dataframe. Each experiment (or simulation) consists of:</p>
+<p>The data should be passed to the CutPredictor as <code>pandas</code> data frames. Each experiment (or simulation) with a unique ID 'doe_id' consists of:</p>
 <ul>
 <li>a set of <span class="arithmatex">\(d\)</span> process parameters defining the experiment (definition of the material, force applied, etc).</li>
 <li>a 1D position regularly sampled along some axis (<span class="arithmatex">\(m\)</span> points).</li>
-<li>a resulting deviation (or anything else) for each position.</li>
+<li>a resulting output variable (such as a deviation) for each position.</li>
 </ul>
-<p>The goal is to learn to predict the deviation for any position, given a set of (new) process parameters.</p>
-<p>Taking the example of the x0 cut in the <code>Cut_x0.ipynb</code> notebook, the process parameters are:</p>
+<p>The goal is for example to learn to predict the deviation for any position, given a set of (new) process parameters.</p>
+<p>Taking the example of the x0 cut in the <code>Cut_x0.ipynb</code> notebook, the process parameters may be:</p>
 <ul>
 <li>Blechdicke</li>
 <li>Niederhalterkraft</li>
@@ -439,49 +439,49 @@
 </ul>
 <p>the position is <code>tp</code> and the value to predict is <code>deviationc</code>. </p>
 <p><img alt="Example for a single set of process parameters." src="../x0.png" /></p>
-<p>The data frame should have <span class="arithmatex">\(d+2\)</span> named columns, the <span class="arithmatex">\(d\)</span> process parameters, the position and the output deviation. Each row should have the value of all attributes for a single point:</p>
+<p>Two data frames should be prepared:</p>
+<ol>
+<li>A <code>doe</code> data frame for the <span class="arithmatex">\(d\)</span> process parameters, including a unique ID per experiment.</li>
+<li>A <code>data</code> data frame for the 1D values, with a unique experiment ID for each sample.</li>
+</ol>
+<p>The <code>doe</code> data frame should look like:</p>
 <table>
 <thead>
 <tr>
+<th>doe_id</th>
 <th>Blechdicke</th>
 <th>Kraft</th>
 <th>Ziehspalt</th>
 <th>Position</th>
 <th>Ziehtiefe</th>
-<th>tp</th>
-<th>deviationc</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td>1</td>
 <td>1.01</td>
 <td>410.0</td>
 <td>2.4</td>
 <td>-5</td>
 <td>30</td>
-<td>0.0</td>
-<td>3.56</td>
 </tr>
 <tr>
-<td>1.01</td>
-<td>410.0</td>
+<td>2</td>
+<td>1.48</td>
+<td>400.0</td>
 <td>2.4</td>
-<td>-5</td>
+<td>-4</td>
 <td>30</td>
-<td>0.01</td>
-<td>3.57</td>
 </tr>
 <tr>
-<td>1.01</td>
-<td>410.0</td>
+<td>3</td>
+<td>1.00</td>
+<td>210.0</td>
 <td>2.4</td>
-<td>-5</td>
+<td>-1</td>
 <td>30</td>
-<td>0.02</td>
-<td>3.58</td>
 </tr>
 <tr>
-<td>...</td>
 <td>...</td>
 <td>...</td>
 <td>...</td>
@@ -491,9 +491,42 @@
 </tr>
 </tbody>
 </table>
-<p>This means that the process parameters are repeated <span class="arithmatex">\(m\)</span> times, which is a waste of disk space. However, this will have to be dome at some points before feeding the data to the neural network, so it is better to waste disk space than computing time. </p>
-<p>Once the data is prepared in that format and saved to disk (csv, hdf5...), the data frame can be loaded:</p>
-<div class="highlight"><pre><span></span><code><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data.csv&#39;</span><span class="p">)</span>
+<p>The <code>data</code> data frame should look like:</p>
+<table>
+<thead>
+<tr>
+<th>doe_id</th>
+<th>tp</th>
+<th>deviationc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>0.00</td>
+<td>1.43</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0.01</td>
+<td>1.45</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0.02</td>
+<td>1.47</td>
+</tr>
+<tr>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+</tbody>
+</table>
+<p>Additional columns are not a problem. The name of the column for the experiment ID (here <code>doe_id</code>) should be the same in both data frames.</p>
+<p>Once the data is prepared in that format and saved to disk (csv, hdf5...), the data frames can be loaded:</p>
+<div class="highlight"><pre><span></span><code><span class="n">doe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;doe.csv&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data.csv&#39;</span><span class="p">)</span>
 </code></pre></div>
 
               

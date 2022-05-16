@@ -318,6 +318,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#loading-a-pretrained-network" class="md-nav__link">
+    Loading a pretrained network
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -517,6 +524,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#loading-a-pretrained-network" class="md-nav__link">
+    Loading a pretrained network
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -537,8 +551,11 @@
 
 <h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h1>
 <h2 id="loading-the-data">Loading the data<a class="headerlink" href="#loading-the-data" title="Permanent link">#</a></h2>
-<p>Once the data is loaded as a pandas Dataframe, it can be passed to the <code>CutPredictor</code> object:</p>
-<div class="highlight"><pre><span></span><code><span class="n">reg</span> <span class="o">=</span> <span class="n">CutPredictor</span><span class="p">(</span>
+<p>Once the data is loaded as pandas Dataframes, it can be loaded into the <code>CutPredictor</code> object:</p>
+<div class="highlight"><pre><span></span><code><span class="n">reg</span> <span class="o">=</span> <span class="n">CutPredictor</span><span class="p">()</span>
+
+<span class="n">reg</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span>
+    <span class="n">doe</span> <span class="o">=</span> <span class="n">doe</span><span class="p">,</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">,</span>
     <span class="n">process_parameters</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s1">&#39;Blechdicke&#39;</span><span class="p">,</span> 
@@ -553,12 +570,13 @@
         <span class="s1">&#39;Ziehtiefe&#39;</span>
     <span class="p">],</span>
     <span class="n">position</span> <span class="o">=</span> <span class="s1">&#39;tp&#39;</span><span class="p">,</span>
-    <span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;deviationc&#39;</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;deviationc&#39;</span><span class="p">,</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="s1">&#39;doe_id&#39;</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>One has to specify among all the columns present in the frame which ones are process parameters, which one is the input position and which one is the output.</p>
+<p>One has to specify among all the columns present in the frames which ones are process parameters, which one is the input position and which one(s) is the output. If several output variables should be predicted, a list of names should be given. The name of the column contining the experiment ID should be provided.</p>
 <p>Optionally, one can specify which process parameter is categorical (as opposed to numerical), i.e. takes discrete values. This only influences the training of the neural network, as categorical attributes are then one-hot encoded before being passed to the NN. This is however optional.</p>
-<p>When the data is loaded in the <code>CutPredictor</code>, it is normalized to allow for efricient training, so this can take a while depending on the size of your data.</p>
+<p>When the data is loaded in the <code>CutPredictor</code>, it is normalized to allow for efficient training, so this can take a while depending on the size of your data.</p>
 <h2 id="training-the-network">Training the network<a class="headerlink" href="#training-the-network" title="Permanent link">#</a></h2>
 <p><code>CutPredictor</code> uses a feedforward neural network to perform the regression. It is a simple multi-layer perceptron with several layers of neuron, using the mean square error as a loss function. </p>
 <p>The hyperparameters of the NN are:</p>
@@ -606,9 +624,6 @@
 <div class="highlight"><pre><span></span><code><span class="n">reg</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="n">save_path</span><span class="o">=</span><span class="s1">&#39;best_model&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
 <p>The model's weights are saved in <code>best_model/</code>.</p>
-<p>If you already have trained a model and only want to visualize the results, you can simply load it:</p>
-<div class="highlight"><pre><span></span><code><span class="n">reg</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">load_path</span><span class="o">=</span><span class="s1">&#39;best_model&#39;</span><span class="p">)</span>
-</code></pre></div>
 <h2 id="visualizing-the-results">Visualizing the results<a class="headerlink" href="#visualizing-the-results" title="Permanent link">#</a></h2>
 <p>To make a prediction for a (potentially new) set of process parameters, simply pass them to the <code>predict()</code> method as a dictionary:</p>
 <div class="highlight"><pre><span></span><code><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span>
@@ -627,6 +642,18 @@
 <span class="n">reg</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
 </code></pre></div>
 <p><img alt="" src="../sliders.png" /></p>
+<h2 id="loading-a-pretrained-network">Loading a pretrained network<a class="headerlink" href="#loading-a-pretrained-network" title="Permanent link">#</a></h2>
+<p>Once a suitable model has been trained on the data and saved in 'best_model', it can be used for inference.</p>
+<p>If you do not want the data to be loaded for the prediction, you should save the data-related parameters (min/max values of the attributes, etc) in a pickle file:</p>
+<div class="highlight"><pre><span></span><code><span class="n">reg</span><span class="o">.</span><span class="n">save_config</span><span class="p">(</span><span class="s2">&quot;network.pkl&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>This way, you can recreate a <code>CutPredictor</code> object without loading the data in memory:</p>
+<div class="highlight"><pre><span></span><code><span class="n">reg</span> <span class="o">=</span> <span class="n">CutPredictor</span><span class="p">()</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s2">&quot;network.pkl&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>and finally load the weights of the trained model:</p>
+<div class="highlight"><pre><span></span><code><span class="n">reg</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">load_path</span><span class="o">=</span><span class="s1">&#39;best_model&#39;</span><span class="p">)</span>
+</code></pre></div>
 
               
             </article>

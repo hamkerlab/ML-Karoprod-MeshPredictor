@@ -2,10 +2,13 @@
 
 ## Loading the data
 
-Once the data is loaded as a pandas Dataframe, it can be passed to the `CutPredictor` object:
+Once the data is loaded as pandas Dataframes, it can be loaded into the `CutPredictor` object:
 
 ```python
-reg = CutPredictor(
+reg = CutPredictor()
+
+reg.load_data(
+    doe = doe,
     data = data,
     process_parameters = [
         'Blechdicke', 
@@ -20,15 +23,16 @@ reg = CutPredictor(
         'Ziehtiefe'
     ],
     position = 'tp',
-    output = 'deviationc'
+    output = 'deviationc',
+    index = 'doe_id',
 )
 ```
 
-One has to specify among all the columns present in the frame which ones are process parameters, which one is the input position and which one is the output.
+One has to specify among all the columns present in the frames which ones are process parameters, which one is the input position and which one(s) is the output. If several output variables should be predicted, a list of names should be given. The name of the column contining the experiment ID should be provided.
 
 Optionally, one can specify which process parameter is categorical (as opposed to numerical), i.e. takes discrete values. This only influences the training of the neural network, as categorical attributes are then one-hot encoded before being passed to the NN. This is however optional.
 
-When the data is loaded in the `CutPredictor`, it is normalized to allow for efricient training, so this can take a while depending on the size of your data.
+When the data is loaded in the `CutPredictor`, it is normalized to allow for efficient training, so this can take a while depending on the size of your data.
 
 ## Training the network
 
@@ -100,12 +104,6 @@ reg.custom_model(save_path='best_model', config=config, verbose=True)
 
 The model's weights are saved in `best_model/`.
 
-If you already have trained a model and only want to visualize the results, you can simply load it:
-
-```python
-reg.load(load_path='best_model')
-```
-
 ## Visualizing the results
 
 To make a prediction for a (potentially new) set of process parameters, simply pass them to the `predict()` method as a dictionary:
@@ -133,3 +131,27 @@ reg.interactive()
 ```
 
 ![](sliders.png)
+
+## Loading a pretrained network
+
+Once a suitable model has been trained on the data and saved in 'best_model', it can be used for inference.
+
+If you do not want the data to be loaded for the prediction, you should save the data-related parameters (min/max values of the attributes, etc) in a pickle file:
+
+```python
+reg.save_config("network.pkl")
+```
+
+This way, you can recreate a `CutPredictor` object without loading the data in memory:
+
+```python
+reg = CutPredictor()
+reg.load_config("network.pkl")
+```
+
+and finally load the weights of the trained model:
+
+```python
+reg.load(load_path='best_model')
+```
+

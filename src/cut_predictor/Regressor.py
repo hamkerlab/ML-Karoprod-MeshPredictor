@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import ipywidgets as widgets
 
 import os
+import pickle
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import optuna
@@ -31,114 +32,140 @@ class CutPredictor(object):
     Regression method to predict 1D cuts from process parameters.
     """
 
-    def __init__(self, data, process_parameters, position, output, categorical=[], angle=False):
-        """
-        Loads a pandas Dataframe containing the data and preprocesses it.
+    def __init__(self):
 
-        :param data: pandas.Dataframe object.
-        :param process_parameters: list of process parameters. The names must match the columns of the csv file.
-        :param position: position variable. The name must match one column of the csv file.
-        :param output: output variable to be predicted. The name must match one column of the csv file.
-        :param angle: if the position parameter is an angle, its sine and cosine are used as inputs instead.
-        """
-
+        # Empty model
         self.model = None
+
+        # Not configured yet
+        self.has_config = False
+        self.data_loaded = False
+        
+    def load_data(self, doe, data, process_parameters, position, output, categorical=[], angle=False, index='doe_id'):
+        """
+        Loads pandas Dataframes containing the data and preprocesses it.
+
+        :param doe: pandas.Dataframe object containing the process parameters (design of experiments table).
+        :param data: pandas.Dataframe object containing the experiments.
+        :param process_parameters: list of process parameters ti be used. The names must match the columns of the csv file.
+        :param categorical: list of process parameters that should be considered as categorical nad one-hot encoded.
+        :param position: position variable. The name must match one column of the csv file.
+        :param output: output variable(s) to be predicted. If several variables The name must match one column of the csv file.
+        :param angle: if the position parameter is an angle, its sine and cosine are used as inputs instead.
+        :param index: name of the column in doe and data representing the design ID (default: 'doe_id')
+        """
+
+        self.has_config = True
+        self.data_loaded = True
 
         # Attributes names
         self.process_parameters = process_parameters
         self.position_attribute = position
-        self.output_attribute = output
+        if isinstance(output, list): 
+            self.output_attributes = output
+        else:
+            self.output_attributes = [output]
         self.categorical_attributes = categorical
         self.angle_input = angle
+        self.doe_id = index
 
-        # Extract relevant data
-        self.features = self.process_parameters + [self.position_attribute]
-        self.df_X = data[self.features]
-        self.df_Y = data[self.output_attribute]
+        self.features = []
+        self.categorical_values = {}
 
         # Min/Max/Mean/Std values
         self.min_values = {}
         self.max_values = {}
         self.mean_values = {}
         self.std_values = {}
-        mins = self.df_X.min(axis=0)
-        maxs = self.df_X.max(axis=0)
-        means = self.df_X.mean(axis=0)
-        stds = self.df_X.std(axis=0)
-        for attr in self.features:
-            self.min_values[attr] = mins[attr]
-            self.max_values[attr] = maxs[attr]
-            self.mean_values[attr] = means[attr]
-            self.std_values[attr] = stds[attr]
 
-        self.min_values[self.output_attribute] = self.df_Y.min(axis=0)
-        self.max_values[self.output_attribute] = self.df_Y.max(axis=0)
-        self.mean_values[self.output_attribute] = self.df_Y.mean(axis=0)
-        self.std_values[self.output_attribute] = self.df_Y.std(axis=0)
+        # Process parameters
+        self._preprocess_parameters(doe)
 
-        # Categorical attributes
-        self.categorical_values = {}
-        for attr in self.categorical_attributes:
-            self.categorical_values[attr] = sorted(self.df_X[attr].unique())
+        # Expand the process parameters in the main df
+        self._preprocess_variables(data)
 
         # Get numpy arrays
-        self.X = self.df_X.to_numpy()
-        self.target = self.df_Y.to_numpy()
-
-        # Normalizing input data
-        self._input_normalization()
+        self.X = self.df[self.features].to_numpy()
+        self.target = self.df[self.output_attributes].to_numpy()
 
         self.input_shape = (self.X.shape[1], )
+        self.number_samples = self.X.shape[0]
 
+    def _preprocess_parameters(self, doe):
 
-    def _input_normalization(self):
+        self.df_doe_raw = doe[[self.doe_id] + self.process_parameters]
 
-        N, _ = self.X.shape
-        X = np.empty((N, 0))
+        self.df_doe = pd.DataFrame()
+        self.df_doe[self.doe_id] = doe[self.doe_id]
 
-        for idx, attr in enumerate(self.features):
+        for attr in self.process_parameters:
 
-            if attr == self.position_attribute:
+            if not attr in self.categorical_attributes: # numerical
 
-                if not self.angle_input:
+                data = doe[attr]
+                self.features.append(attr)
 
-                    values = ((self.X[:, idx] - self.mean_values[attr] ) / self.std_values[attr]).reshape((N, 1))
+                self.min_values[attr] = data.min()
+                self.max_values[attr] = data.max()
+                self.mean_values[attr] = data.mean()
+                self.std_values[attr] = data.std()
 
-                    X = np.concatenate(
-                        (X, values ), 
-                        axis=1
-                    )
+                self.df_doe = self.df_doe.join((data - self.mean_values[attr])/self.std_values[attr])
 
-                else:
+            else: # categorical
+                self.categorical_values[attr] = sorted(doe[attr].unique())
 
-                    angle = self.X[:, idx]
-                    X = np.concatenate((X, np.cos(angle).reshape((N, 1)) ), axis=1)
-                    X = np.concatenate((X, np.sin(angle).reshape((N, 1)) ), axis=1)
+                onehot = pd.get_dummies(doe[attr], prefix=attr)
+                for val in onehot.keys():
+                    self.features.append(val)
 
-            elif attr in self.categorical_attributes:
+                self.df_doe = self.df_doe.join(onehot)
 
-                X = np.concatenate((X, one_hot(self.X[:, idx], self.categorical_values[attr]) ), axis=1)
+    def _preprocess_variables(self, df):
 
-            else:
+        # Position input and output variables
+        for attr in [self.position_attribute] + self.output_attributes:
+            data = df[attr]
+            self.min_values[attr] = data.min()
+            self.max_values[attr] = data.max()
+            self.mean_values[attr] = data.mean()
+            self.std_values[attr] = data.std()
 
-                X = np.concatenate(
-                    (X, ((self.X[:, idx] - self.mean_values[attr] ) / self.std_values[attr]).reshape((N, 1)) ), 
-                    axis=1)
+        # Main dataframe
+        self.df_raw = df[[self.doe_id, self.position_attribute] + self.output_attributes]
+        self.df = self.df_raw.merge(self.df_doe, how='left', on=self.doe_id)
 
-        self.X = X
+        self.df.drop(self.doe_id, axis=1, inplace=True)
 
-        # Normalize output
-        self.target = (self.target - self.min_values[self.output_attribute])/(self.max_values[self.output_attribute] - self.min_values[self.output_attribute])
+        # Normalize input and outputs
+        if not self.angle_input:
+            self.df[self.position_attribute] = self.df[self.position_attribute].apply(
+                lambda x: (x - self.mean_values[self.position_attribute])/(self.std_values[self.position_attribute])
+            ) 
+            self.features.append(self.position_attribute)
+        else:
+            self.df["cos_" + self.position_attribute] = np.cos(self.df[self.position_attribute])
+            self.df["sin_" + self.position_attribute] = np.sin(self.df[self.position_attribute])
+            self.features.append("cos_" + self.position_attribute)
+            self.features.append("sin_" + self.position_attribute)
+        
+        for attr in self.output_attributes:
+            self.df[attr] = self.df[attr].apply(
+                lambda x: (x - self.min_values[attr])/(self.max_values[attr] - self.min_values[attr])
+            ) 
 
     # Rescales the output
-    def _rescale_output(self, y):
+    def _rescale_output(self, attr, y):
 
-        return self.min_values[self.output_attribute] + (self.max_values[self.output_attribute] - self.min_values[self.output_attribute]) * y
+        return self.min_values[attr] + (self.max_values[attr] - self.min_values[attr]) * y
 
     def data_summary(self):
         """
         Displays a summary of the loaded data.
         """
+        if not self.has_config:
+            print("Error: The data has not been loaded yet.")
+            return
 
         print("Data summary\n" + "-"*60 + "\n")
 
@@ -155,13 +182,84 @@ class CutPredictor(object):
             print("Position variable:")
         print("\t-", self.position_attribute, ": numerical,", "[", self.min_values[self.position_attribute], "/", self.max_values[self.position_attribute], "]")
 
-        print("Output variable:")
-        print("\t-", self.output_attribute, ": numerical,", "[", self.min_values[self.output_attribute], "/", self.max_values[self.output_attribute], "]")
+        print("Output variable(s):")
+        for attr in self.output_attributes:
+            print("\t-", attr, ": numerical,", "[", self.min_values[attr], "/", self.max_values[attr], "]")
 
-        print("\nInputs\n" + "-"*60 + "\n")
-        print(self.X.shape)
-        print("\nOutputs\n" + "-"*60 + "\n")
-        print(self.target.shape)
+        if self.data_loaded:
+            print("\nInputs\n" + "-"*60 + "\n")
+            print(self.X.shape)
+            print("\nOutputs\n" + "-"*60 + "\n")
+            print(self.target.shape)
+
+    def save_config(self, filename):
+        """
+        Saves the configuration of the regressor, especially all variables derived from the data (min/max values, etc). 
+
+        Needed to make predictions from a trained model without having to reload the data.
+
+        :param filename: path to the pickle file where the information will be saved.
+        """
+        config = {
+            # Features
+            'process_parameters': self.process_parameters,
+            'position_attribute': self.position_attribute,
+            'output_attributes': self.output_attributes,
+            'categorical_attributes': self.categorical_attributes,
+            'angle_input': self.angle_input,
+            'doe_id': self.doe_id,
+            'features': self.features,
+            'categorical_values': self.categorical_values,
+
+            # Min/Max/Mean/Std values
+            'min_values': self.min_values,
+            'max_values': self.max_values,
+            'mean_values': self.mean_values,
+            'std_values': self.std_values,
+
+            # Data shape
+            'input_shape': self.input_shape,
+            'number_samples': self.number_samples,
+        }
+
+        for key, val in config.items():
+            print(key, val, type(val))
+
+        with open(filename, 'wb') as f:
+            pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
+
+    def load_config(self, filename):
+        """
+        Loads data configuration from a pickle file created with save_config().
+        
+        :param filename: path to the pickle file where the information was saved.
+        """
+
+        with open(filename, 'rb') as f:
+            config  =  pickle.load(f)
+
+        # Features
+        self.process_parameters = config['process_parameters']
+        self.position_attribute = config['position_attribute']
+        self.output_attributes = config['output_attributes']
+        self.categorical_attributes = config['categorical_attributes']
+        self.angle_input = config['angle_input']
+        self.doe_id = config['doe_id']
+        self.features = config['features']
+        self.categorical_values = config['categorical_values']
+
+        # Min/Max/Mean/Std values
+        self.min_values = config['min_values']
+        self.max_values = config['max_values']
+        self.mean_values = config['mean_values']
+        self.std_values = config['std_values']
+
+        # Data shape
+        self.input_shape = config['input_shape']
+        self.number_samples = config['number_samples']
+
+        self.has_config = True
+    
 
     def _create_model(self, config):
 
@@ -179,7 +277,7 @@ class CutPredictor(object):
                 model.add(tf.keras.layers.Dropout(config['dropout']))
         
         # Output layer
-        model.add(tf.keras.layers.Dense(1))
+        model.add(tf.keras.layers.Dense(len(self.output_attributes)))
 
         # Compile
         model.compile(
@@ -251,6 +349,11 @@ class CutPredictor(object):
         :param learning_rate: range for the learning rate (default: [1e-6, 1e-3]). The values will be sampled log-uniformly.
 
         """
+
+        if not self.has_config:
+            print("Error: The data has not been loaded yet.")
+            return
+
         # Save arguments
         self.save_path = save_path
         self.batch_size = batch_size
@@ -305,9 +408,12 @@ class CutPredictor(object):
         :param save_path: path to save the best model (default: 'best_model').
         :param config: dictionary containing the description of the model.
         :param verbose: whether training details should be printed.
-
-
         """
+
+        if not self.has_config:
+            print("Error: The data has not been loaded yet.")
+            return
+
         # Save arguments
         self.save_path = save_path
         self.best_config = config
@@ -345,6 +451,10 @@ class CutPredictor(object):
         Can only be called after ``autotune()`` or ``custom_model``. You need to finally call `plt.show()` if you are in a script.
         """
 
+        if not self.has_config:
+            print("Error: The data has not been loaded yet.")
+            return
+
         # Training performance
         plt.figure()
         plt.plot(self.best_history.history['loss'][:], label="training")
@@ -357,30 +467,36 @@ class CutPredictor(object):
 
         y = self.model.predict(self.X, batch_size=self.batch_size)
 
-        plt.figure()
-        plt.scatter(self._rescale_output(self.target), self._rescale_output(y), s=1)
-        plt.xlabel("Ground truth")
-        plt.ylabel("Prediction")
-        plt.title("Ground truth vs. prediction")
-        plt.savefig(self.save_path + "/prediction.png")
+        for idx, attr in enumerate(self.output_attributes):
+            plt.figure()
+            plt.scatter(self._rescale_output(attr, self.target[:, idx]), self._rescale_output(attr, y[:, idx]), s=1)
+            plt.xlabel("Ground truth")
+            plt.ylabel("Prediction")
+            plt.title("Ground truth vs. prediction for " + attr)
+            plt.savefig(self.save_path + "/prediction_" + attr + ".png")
 
-        plt.figure()
-        plt.subplot(121)
-        plt.hist(self._rescale_output(self.target))
-        plt.xlabel("Ground truth")
-        plt.subplot(122)
-        plt.hist(self._rescale_output(y))
-        plt.xlabel("Prediction")
-        plt.title("Statistics")
-        plt.savefig(self.save_path + "/distribution.png")
+        for idx, attr in enumerate(self.output_attributes):
+            plt.figure()
+            plt.subplot(121)
+            plt.hist(self._rescale_output(attr, self.target[:, idx]))
+            plt.xlabel("Ground truth")
+            plt.ylabel(attr)
+            plt.subplot(122)
+            plt.hist(self._rescale_output(attr, y[:, idx]))
+            plt.xlabel("Prediction")
+            plt.savefig(self.save_path + "/distribution_" + attr + ".png")
 
-    def load(self, load_path='best_model', batch_size=4096):
+    def load_network(self, load_path='best_model', batch_size=4096):
         """
         Load a pretrained network from a saved folder. The only parameter not saved by default is the batch size.
 
         :param load_path: path to the directory where the best network was saved (default: 'best_model')
         :param batch_size: batch size to be used (default: 4096).
         """
+
+        if not self.has_config:
+            print("Error: The data has not been loaded yet.")
+            return
 
         self.batch_size = batch_size
         self.save_path = load_path
@@ -394,39 +510,23 @@ class CutPredictor(object):
 
         :param process_parameters: dictionary containing the value of all process parameters.
         :param nb_points: number of input positions to be used for the prediction.
+        :return: (x, y) where x is a 1D position and y the value of each output attribute.
         """
+
+        if not self.has_config:
+            print("Error: The data has not been loaded yet.")
+            return
 
         if self.model is None:
             print("Error: no model has been trained yet.")
             return
 
-        position = np.linspace(self.min_values[self.position_attribute], self.max_values[self.position_attribute], nb_points)
-
         X = np.empty((nb_points, 0))
 
-        for idx, attr in enumerate(self.features):
+        for idx, attr in enumerate(self.process_parameters):
 
-            if attr == self.position_attribute:
-
-                if not self.angle_input:
-
-                    values = (position.reshape((nb_points, 1)) - self.mean_values[attr] ) / self.std_values[attr]
-                    X = np.concatenate((X, values), axis=1)
-
-                else:
-
-                    X = np.concatenate(
-                        (X, np.cos(position).reshape((nb_points, 1)) ), 
-                        axis=1
-                    )
-                    X = np.concatenate(
-                        (X, np.sin(position).reshape((nb_points, 1)) ), 
-                        axis=1
-                    )
-
-            elif attr in self.categorical_attributes:
+            if attr in self.categorical_attributes:
                 
-
                 code = one_hot([process_parameters[attr]], self.categorical_values[attr])
                 code = np.repeat(code, nb_points, axis=0)
                 
@@ -438,43 +538,68 @@ class CutPredictor(object):
 
                 X = np.concatenate((X, val ), axis=1)
 
+        # Position attribute is last
+        position = np.linspace(self.min_values[self.position_attribute], self.max_values[self.position_attribute], nb_points)
 
-        y = self.model.predict(X, batch_size=self.batch_size)
+        if not self.angle_input:
 
-        y = self._rescale_output(y)
+            values = (position.reshape((nb_points, 1)) - self.mean_values[self.position_attribute] ) / self.std_values[self.position_attribute]
+            X = np.concatenate((X, values), axis=1)
+
+        else:
+
+            X = np.concatenate(
+                (X, np.cos(position).reshape((nb_points, 1)) ), 
+                axis=1
+            )
+            X = np.concatenate(
+                (X, np.sin(position).reshape((nb_points, 1)) ), 
+                axis=1
+            )
+
+        y = self.model.predict(X, batch_size=self.batch_size).reshape((nb_points, len(self.output_attributes)))
+
+        for idx, attr in enumerate(self.output_attributes):
+            y[:, idx] = self._rescale_output(attr, y[:, idx])
 
         return position, y
 
 
-    def compare(self, start, stop):
+    def compare(self, doe_id):
         """
-        Compares the prediction and the ground truth for the data points if indices comprised between start and stop.
+        Compares the prediction and the ground truth for the specified experiment.
 
         Creates a matplotlib figure. 
 
-        :param start: start index (included).
-        :param stop: stop index (excluded).
+        :param doe_id: id of the experiment.
         """
 
         if self.model is None:
             print("Error: no model has been trained yet.")
             return
 
-        X = self.X[start:stop]
-        t = self._rescale_output(self.target[start:stop])
+        indices = self.df_raw[self.df_raw[self.doe_id]==doe_id].index.to_numpy()
+        N = len(indices)
+        X = self.X[indices]
+        t = self.target[indices]
+        for idx, attr in enumerate(self.output_attributes):
+            t[:, idx] = self._rescale_output(attr, t[:, idx])
 
         position = self.mean_values[self.position_attribute] +  self.std_values[self.position_attribute] * X[:, -1] # position is the last index
 
         y = self.model.predict(X, batch_size=self.batch_size)
-        y = self._rescale_output(y)
 
-        plt.figure()
-        plt.plot(position, y, label="prediction")
-        plt.plot(position, t, label="data")
-        plt.xlabel(self.position_attribute)
-        plt.ylabel(self.output_attribute)
-        plt.ylim((self.min_values[self.output_attribute], self.max_values[self.output_attribute]))
-        plt.legend()
+        for idx, attr in enumerate(self.output_attributes):
+            y[:, idx] = self._rescale_output(attr, y[:, idx])
+
+        for idx, attr in enumerate(self.output_attributes):
+            plt.figure()
+            plt.plot(position, y[:, idx], label="prediction")
+            plt.plot(position, t[:, idx], label="data")
+            plt.xlabel(self.position_attribute)
+            plt.ylabel(attr)
+            plt.ylim((self.min_values[attr], self.max_values[attr]))
+            plt.legend()
 
 
     def interactive(self):
@@ -492,10 +617,9 @@ class CutPredictor(object):
 
         values = {}
 
-        for attr in self.features:
-            if attr == self.position_attribute:
-                continue
-            elif attr in self.categorical_attributes:
+        for attr in self.process_parameters:
+
+            if attr in self.categorical_attributes:
                 values[attr] = widgets.Dropdown(
                     options=self.categorical_values[attr],
                     value=self.categorical_values[attr][0],
@@ -519,11 +643,13 @@ class CutPredictor(object):
 
         x, y = self.predict(values, 100)
 
-        plt.figure()
-        plt.plot(x, y)
-        plt.xlabel(self.position_attribute)
-        plt.ylabel(self.output_attribute)
-        plt.xlim((self.min_values[self.position_attribute], self.max_values[self.position_attribute]))
-        plt.ylim((self.min_values[self.output_attribute], self.max_values[self.output_attribute]))
+        for idx, attr in enumerate(self.output_attributes):
+            plt.figure()
+            plt.plot(x, y[:, idx])
+            plt.xlabel(self.position_attribute)
+            plt.ylabel(attr)
+            plt.xlim((self.min_values[self.position_attribute], self.max_values[self.position_attribute]))
+            plt.ylim((self.min_values[attr], self.max_values[attr]))
+        
         plt.show()
         

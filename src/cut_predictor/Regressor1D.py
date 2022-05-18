@@ -50,7 +50,7 @@ class CutPredictor(object):
         :param process_parameters: list of process parameters ti be used. The names must match the columns of the csv file.
         :param categorical: list of process parameters that should be considered as categorical nad one-hot encoded.
         :param position: position variable. The name must match one column of the csv file.
-        :param output: output variable(s) to be predicted. If several variables The name must match one column of the csv file.
+        :param output: output variable(s) to be predicted. The name must match one column of the csv file.
         :param angle: if the position parameter is an angle, its sine and cosine are used as inputs instead.
         :param index: name of the column in doe and data representing the design ID (default: 'doe_id')
         """

@@ -51,7 +51,9 @@ nav:
   - 'datapreparation.md'
   - 'usage.md'
   - API:
+    - 'Predictor.md'
     - 'CutPredictor.md'
+    - 'ProjectionPredictor.md'
   - Examples:
     - 'Cut_x0.ipynb'
     - 'Cut_web.ipynb'

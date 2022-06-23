@@ -57,13 +57,13 @@ class CutPredictor(Predictor):
 
 
 
-    def predict(self, process_parameters, nb_points):
+    def predict(self, process_parameters, positions):
         """
         Predicts the output variable for a given number of input positions (uniformly distributed between the min/max values used for training).
 
         :param process_parameters: dictionary containing the value of all process parameters.
-        :param nb_points: number of input positions to be used for the prediction.
-        :return: (x, y) where x is a 1D position and y the value of each output attribute.
+        :param positions: number of input positions to be used for the prediction.
+        :return: (x, y) where x is an array of 1D positions and y the corresponding value of each output attribute.
         """
 
         if not self.has_config:
@@ -74,44 +74,44 @@ class CutPredictor(Predictor):
             print("Error: no model has been trained yet.")
             return
 
-        X = np.empty((nb_points, 0))
+        X = np.empty((positions, 0))
 
         for idx, attr in enumerate(self.process_parameters):
 
             if attr in self.categorical_attributes:
                 
                 code = one_hot([process_parameters[attr]], self.categorical_values[attr])
-                code = np.repeat(code, nb_points, axis=0)
+                code = np.repeat(code, positions, axis=0)
                 
                 X = np.concatenate((X, code), axis=1)
 
             else:
 
-                val = ((process_parameters[attr] - self.mean_values[attr] ) / self.std_values[attr]) * np.ones((nb_points, 1))
+                val = ((process_parameters[attr] - self.mean_values[attr] ) / self.std_values[attr]) * np.ones((positions, 1))
 
                 X = np.concatenate((X, val ), axis=1)
 
         # Position attribute is last
         for attr in self.position_attributes:
-            position = np.linspace(self.min_values[attr], self.max_values[attr], nb_points)
+            position = np.linspace(self.min_values[attr], self.max_values[attr], positions)
 
             if not self.angle_input:
 
-                values = (position.reshape((nb_points, 1)) - self.mean_values[attr] ) / self.std_values[attr]
+                values = (position.reshape((positions, 1)) - self.mean_values[attr] ) / self.std_values[attr]
                 X = np.concatenate((X, values), axis=1)
 
             else:
 
                 X = np.concatenate(
-                    (X, np.cos(position).reshape((nb_points, 1)) ), 
+                    (X, np.cos(position).reshape((positions, 1)) ), 
                     axis=1
                 )
                 X = np.concatenate(
-                    (X, np.sin(position).reshape((nb_points, 1)) ), 
+                    (X, np.sin(position).reshape((positions, 1)) ), 
                     axis=1
                 )
 
-        y = self.model.predict(X, batch_size=self.batch_size).reshape((nb_points, len(self.output_attributes)))
+        y = self.model.predict(X, batch_size=self.batch_size).reshape((positions, len(self.output_attributes)))
 
         for idx, attr in enumerate(self.output_attributes):
             y[:, idx] = self._rescale_output(attr, y[:, idx])
@@ -119,20 +119,18 @@ class CutPredictor(Predictor):
         return position, y
 
 
-    def compare(self, doe_id):
-        """
-        Compares the prediction and the ground truth for the specified experiment.
-
-        Creates a matplotlib figure. 
-
-        :param doe_id: id of the experiment.
-        """
+    def _compare(self, doe_id):
 
         if self.model is None:
             print("Error: no model has been trained yet.")
             return
 
+        if not doe_id in self.doe_ids:
+            print("The experiment", doe_id, 'is not in the dataset.')
+            return
+
         indices = self.df_raw[self.df_raw[self.doe_id]==doe_id].index.to_numpy()
+        
         N = len(indices)
         X = self.X[indices]
         t = self.target[indices]
@@ -157,56 +155,3 @@ class CutPredictor(Predictor):
             plt.ylim((self.min_values[attr], self.max_values[attr]))
             plt.legend()
 
-
-    def interactive(self):
-        """
-        Method to interactively vary the process parameters and predict the corresponding cut. 
-
-        Only work in a Jupyter notebook. 
-
-        ```python
-        %matplotlib inline
-        plt.rcParams['figure.dpi'] = 150
-        reg.interactive()
-        ```
-        """
-        import ipywidgets as widgets
-
-        values = {}
-
-        for attr in self.process_parameters:
-
-            if attr in self.categorical_attributes:
-                values[attr] = widgets.Dropdown(
-                    options=self.categorical_values[attr],
-                    value=self.categorical_values[attr][0],
-                )
-            else:
-                values[attr] = widgets.FloatSlider(
-                        value=self.mean_values[attr],
-                        min=self.min_values[attr],
-                        max=self.max_values[attr],
-                        step=(self.max_values[attr] - self.min_values[attr])/100.,
-                )
-    
-        display(
-            widgets.interactive(self._visualize, 
-            **values
-            )
-        )
-        
-
-    def _visualize(self, **values):
-
-        x, y = self.predict(values, 100)
-
-        for idx, attr in enumerate(self.output_attributes):
-            plt.figure()
-            plt.plot(x, y[:, idx])
-            plt.xlabel(self.position_attributes[0])
-            plt.ylabel(attr)
-            plt.xlim((self.min_values[self.position_attributes[0]], self.max_values[self.position_attributes[0]]))
-            plt.ylim((self.min_values[attr], self.max_values[attr]))
-        
-        plt.show()
-        

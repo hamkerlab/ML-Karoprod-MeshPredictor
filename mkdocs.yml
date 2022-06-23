@@ -54,8 +54,11 @@ nav:
     - 'Predictor.md'
     - 'CutPredictor.md'
     - 'ProjectionPredictor.md'
+    - 'MeshPredictor.md'
   - Examples:
     - 'Cut_x0.ipynb'
     - 'Cut_web.ipynb'
     - 'Cut_flange.ipynb'
-    - 'ProjectionPrediction.ipynb'
+    - 'Projection_2D.ipynb'
+    - 'Reference_3D.ipynb'
+    - 'Springback_UV.ipynb'

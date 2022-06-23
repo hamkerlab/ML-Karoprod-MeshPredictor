@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -34,7 +35,7 @@ class ProjectionPredictor(Predictor):
         self.position_attributes = position
         if not len(self.position_attributes) == 2:
             print("Error: the position attribute must have two dimensions.")
-            exit()
+            sys.exit()
         
         if isinstance(output, list): 
             self.output_attributes = output
@@ -65,7 +66,7 @@ class ProjectionPredictor(Predictor):
 
         :param process_parameters: dictionary containing the value of all process parameters.
         :param shape: tuple of dimensions to be used for the prediction.
-        :return: (x, y) where x is a 1D position and y the value of each output attribute.
+        :return: (x, y) where x is a list of 2D positions and y the value of each output attribute.
         """
 
         if not self.has_config:
@@ -120,17 +121,14 @@ class ProjectionPredictor(Predictor):
         return positions, np.array(result)
 
 
-    def compare(self, doe_id):
-        """
-        Compares the prediction and the ground truth for the specified experiment.
-
-        Creates a matplotlib figure. 
-
-        :param doe_id: id of the experiment.
-        """
+    def _compare(self, doe_id):
 
         if self.model is None:
             print("Error: no model has been trained yet.")
+            return
+
+        if not doe_id in self.doe_ids:
+            print("The experiment", doe_id, 'is not in the dataset.')
             return
 
         indices = self.df_raw[self.df_raw[self.doe_id]==doe_id].index.to_numpy()
@@ -163,55 +161,3 @@ class ProjectionPredictor(Predictor):
             plt.tight_layout()
 
 
-    def interactive(self):
-        """
-        Method to interactively vary the process parameters and predict the corresponding cut. 
-
-        Only work in a Jupyter notebook. 
-
-        ```python
-        %matplotlib inline
-        plt.rcParams['figure.dpi'] = 150
-        reg.interactive()
-        ```
-        """
-        import ipywidgets as widgets
-
-        values = {}
-
-        for attr in self.process_parameters:
-
-            if attr in self.categorical_attributes:
-                values[attr] = widgets.Dropdown(
-                    options=self.categorical_values[attr],
-                    value=self.categorical_values[attr][0],
-                )
-            else:
-                values[attr] = widgets.FloatSlider(
-                        value=self.mean_values[attr],
-                        min=self.min_values[attr],
-                        max=self.max_values[attr],
-                        step=(self.max_values[attr] - self.min_values[attr])/100.,
-                )
-    
-        display(
-            widgets.interactive(self._visualize, 
-            **values
-            )
-        )
-        
-
-    def _visualize(self, **values):
-
-        x, y = self.predict(values, 100)
-
-        for idx, attr in enumerate(self.output_attributes):
-            plt.figure()
-            plt.plot(x, y[:, idx])
-            plt.xlabel(self.position_attributes)
-            plt.ylabel(attr)
-            plt.xlim((self.min_values[self.position_attributes], self.max_values[self.position_attributes]))
-            plt.ylim((self.min_values[attr], self.max_values[attr]))
-        
-        plt.show()
-        

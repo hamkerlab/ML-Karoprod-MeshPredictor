@@ -1,3 +1,4 @@
+from posixpath import supports_unicode_filenames
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,10 +11,23 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import optuna
 
+def activation_layer(activation):
+    if activation == 'lrelu':
+        return tf.keras.layers.LeakyReLU(alpha=0.01)
+    elif activation == 'prelu':
+        return tf.keras.layers.PReLU()
+    elif activation == 'relu':
+        return tf.keras.layers.ReLU()
+    else:
+        print("The activation function must be either relu, prelu or lrelu.")
+
+
 
 class Predictor(object):
     """
-    Base class for predictors.
+    Base class for the predictors: Cutpredictor, ProjectionPredictor and MeshPredictor.
+
+    Almost all methods are derived from this class, except `load_data()` and `predict()`, which are specific to the input dimensions.
     """
 
     def __init__(self):
@@ -37,8 +51,13 @@ class Predictor(object):
 
     def _preprocess_parameters(self, doe):
 
+        # Raw data, without normalization
         self.df_doe_raw = doe[[self.doe_id] + self.process_parameters]
 
+        # Uniques experiments
+        self.doe_ids = doe[self.doe_id].unique()
+
+        # Normalized dataframe
         self.df_doe = pd.DataFrame()
         self.df_doe[self.doe_id] = doe[self.doe_id]
 
@@ -224,7 +243,10 @@ class Predictor(object):
 
         # Add layers
         for n in config['layers']:
-            model.add(tf.keras.layers.Dense(n, activation='relu'))
+            model.add(tf.keras.layers.Dense(n))
+
+            model.add(activation_layer(config['activation']))
+
             if config['dropout'] > 0.0:
                 model.add(tf.keras.layers.Dropout(config['dropout']))
         
@@ -257,7 +279,8 @@ class Predictor(object):
             'max_epochs': self.max_epochs,
             'layers': layers,
             'dropout': dropout,
-            'learning_rate': learning_rate
+            'learning_rate': learning_rate,
+            'activation': self.activation,
         }
 
         # Create the model
@@ -316,6 +339,7 @@ class Predictor(object):
             self.range_neurons.append(1)
         self.range_dropout = dropout
         self.range_learning_rate = learning_rate
+        self.activation = 'relu'
 
         # Keep the best network only
         self.best_mse = 10000000.0
@@ -341,7 +365,8 @@ class Predictor(object):
                 'max_epochs': 30,
                 'layers': [128, 128, 128, 128, 128],
                 'dropout': 0.0,
-                'learning_rate': 0.005
+                'learning_rate': 0.005,
+                'activation': 'relu',
             },
             verbose=False,
         ):
@@ -349,13 +374,14 @@ class Predictor(object):
         Creates and trains a single model instead of the autotuning procedure.
 
 
-        The dictionary describing the structure of the network must contain the following fields:
+        The dictionary describing the structure of the network can contain the following fields:
         
         * batch_size: batch size to be used (default: 4096).
-        * max_epochs: maximum number of epochs for the training of a single network (default: 20)
+        * max_epochs: maximum number of epochs for the training of a single network (default: 30)
         * layers: list of the number of neurons in each layer (default: [128, 128, 128, 128, 128]).
         * dropout: dropout level (default: 0.0).
-        * learning_rate: learning rate (default: [0.005]).
+        * learning_rate: learning rate (default: 0.005).
+        * activation: activation function to choose between 'relu', 'lrelu' and 'prelu' (default: 'relu')
 
         :param save_path: path to save the best model (default: 'best_model').
         :param config: dictionary containing the description of the model.
@@ -365,6 +391,20 @@ class Predictor(object):
         if not self.has_config:
             print("Error: The data has not been loaded yet.")
             return
+
+        # Set default arguments to the config dict
+        if not 'batch_size' in config.keys():
+            config['batch_size'] = 4096
+        if not 'max_epochs' in config.keys():
+            config['max_epochs'] = 30
+        if not 'layers' in config.keys():
+            config['layers'] = [128, 128, 128, 128, 128]
+        if not 'dropout' in config.keys():
+            config['dropout'] = 0.0
+        if not 'learning_rate' in config.keys():
+            config['learning_rate'] = 0.005
+        if not 'activation' in config.keys():
+            config['activation'] = 'relu'
 
         # Save arguments
         self.save_path = save_path
@@ -400,7 +440,9 @@ class Predictor(object):
         """
         Creates various plots related to the best network. 
         
-        Can only be called after ``autotune()`` or ``custom_model``. You need to finally call `plt.show()` if you are in a script.
+        Can only be called after ``autotune()`` or ``custom_model()``. 
+        
+        You need to finally call `plt.show()` if you are in a script.
         """
 
         if not self.has_config:
@@ -429,13 +471,9 @@ class Predictor(object):
 
         for idx, attr in enumerate(self.output_attributes):
             plt.figure()
-            plt.subplot(121)
-            plt.hist(self._rescale_output(attr, self.target[:, idx]))
-            plt.xlabel("Ground truth")
+            plt.hist(self._rescale_output(attr, self.target[:, idx]) - self._rescale_output(attr, y[:, idx]), bins=100)
+            plt.xlabel("Ground truth minus prediction")
             plt.ylabel(attr)
-            plt.subplot(122)
-            plt.hist(self._rescale_output(attr, y[:, idx]))
-            plt.xlabel("Prediction")
             plt.savefig(self.save_path + "/distribution_" + attr + ".png")
 
     def load_network(self, load_path='best_model', batch_size=4096):
@@ -454,3 +492,75 @@ class Predictor(object):
         self.save_path = load_path
 
         self.model = tf.keras.models.load_model(self.save_path)
+
+    def compare(self, doe_id):
+        """
+        Compares the prediction and the ground truth for the specified experiment.
+
+        Creates a matplotlib figure depending on the actual class (Cut-, Projection- or Mesh-Predictor). 
+
+        :param doe_id: id of the experiment.
+        """
+
+        self._compare(doe_id)
+
+    def interactive(self, function, positions):
+        """
+        Method to interactively vary the process parameters and predict the corresponding shape. 
+
+        Only works in a Jupyter notebook. 
+
+        The `function` argument is a user-defined method that takes `x` (input positions, either 1, 2 or 3D) and `y` (predicted outputs) as arguments and makes a plot (matplotlib or whatever).
+
+        The `positions` argument defines how the input positions should be sampled (same meaning as the `positions` argument of the `predict()` method depending on the class).
+
+        Example for 1D predictions:
+
+        ```python
+        %matplotlib inline
+        plt.rcParams['figure.dpi'] = 150
+
+        def viz(x, y):
+
+            fig = plt.figure()
+            plt.plot(x, y[0, :])
+            plt.show()
+
+        reg.interactive(function=viz, positions=100)
+        ```
+        """
+        import ipywidgets as widgets
+
+        self._visualization_function = function
+        self._visualization_shape = positions
+
+        values = {}
+
+        for attr in self.process_parameters:
+
+            if attr in self.categorical_attributes:
+                values[attr] = widgets.Dropdown(
+                    options=self.categorical_values[attr],
+                    value=self.categorical_values[attr][0],
+                )
+            else:
+                values[attr] = widgets.FloatSlider(
+                        value=self.mean_values[attr],
+                        min=self.min_values[attr],
+                        max=self.max_values[attr],
+                        step=(self.max_values[attr] - self.min_values[attr])/100.,
+                )
+    
+        display(
+            widgets.interactive(self._visualize, 
+            **values
+            )
+        )
+        
+
+    def _visualize(self, **values):
+
+        x, y = self.predict(values, self._visualization_shape)
+
+        self._visualization_function(x, y)
+        

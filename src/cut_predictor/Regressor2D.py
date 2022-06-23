@@ -13,7 +13,7 @@ class ProjectionPredictor(Predictor):
     Derives from Predictor, where more useful methods are defined.
     """
         
-    def load_data(self, doe, data, process_parameters, position, output, categorical=[], index='doe_id'):
+    def load_data(self, doe, data, process_parameters, position, output, categorical=[], index='doe_id', validation_split=0.1, validation_method="random"):
         """
         Loads pandas Dataframes containing the data and preprocesses it.
 
@@ -24,6 +24,8 @@ class ProjectionPredictor(Predictor):
         :param position: position variables as a list. The name must match one column of the csv file.
         :param output: output variable(s) to be predicted. The name must match one column of the csv file.
         :param index: name of the column in doe and data representing the design ID (default: 'doe_id')
+        :param validation_split: percentage of the data used for validation (default: 0.1)
+        :param validation_method: method to split the data for validation, either 'random' or 'leaveoneout' (default: 'random')
         """
 
         self.has_config = True
@@ -45,6 +47,8 @@ class ProjectionPredictor(Predictor):
         self.categorical_attributes = categorical
         self.angle_input = False
         self.doe_id = index
+        self.validation_split = validation_split
+        self.validation_method = validation_method
 
         # Process parameters
         self._preprocess_parameters(doe)

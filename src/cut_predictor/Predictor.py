@@ -2,12 +2,14 @@ from posixpath import supports_unicode_filenames
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import sklearn
 
 import ipywidgets as widgets
 
 import os
 import pickle
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import tensorflow as tf
 import optuna
 
@@ -54,9 +56,6 @@ class Predictor(object):
         # Raw data, without normalization
         self.df_doe_raw = doe[[self.doe_id] + self.process_parameters]
 
-        # Uniques experiments
-        self.doe_ids = doe[self.doe_id].unique()
-
         # Normalized dataframe
         self.df_doe = pd.DataFrame()
         self.df_doe[self.doe_id] = doe[self.doe_id]
@@ -85,6 +84,10 @@ class Predictor(object):
                 self.df_doe = self.df_doe.join(onehot)
 
     def _preprocess_variables(self, df):
+
+        # Unique experiments
+        self.doe_ids = df[self.doe_id].unique()
+        self.number_experiments = len(self.doe_ids)
 
         # Position input and output variables
         for attr in self.position_attributes + self.output_attributes:
@@ -124,8 +127,31 @@ class Predictor(object):
         self.X = self.df[self.features].to_numpy()
         self.target = self.df[self.output_attributes].to_numpy()
 
-        self.input_shape = (self.X.shape[1], )
         self.number_samples = self.X.shape[0]
+        self.input_shape = (self.X.shape[1], )
+
+        if self.validation_method == "random":
+
+            self.X_train, self.X_test, self.y_train, self.y_test = sklearn.model_selection.train_test_split(self.X, self.target, test_size=self.validation_split)
+
+        elif self.validation_method == "leaveoneout":
+
+            test_experiments = np.random.choice(self.doe_ids, size=int(self.number_experiments*self.validation_split), replace=False)
+            self.number_test_experiments = len(test_experiments)
+            test_indices = self.df_raw[self.df_raw[self.doe_id].isin(test_experiments)].index.to_numpy() -1
+            train_indices = np.ones(self.number_samples, dtype=bool)
+            train_indices[test_indices,] = False
+            
+            self.X_train = self.X[train_indices, :]
+            self.X_test = self.X[test_indices, :]
+            self.y_train = self.target[train_indices, :]
+            self.y_test = self.target[test_indices, :]
+
+        else:
+            print("ERROR: the validation method must be either 'random' or 'leaveoneout'.")
+
+        self.number_training_samples = self.X_train.shape[0]
+        self.number_validation_samples = self.X_test.shape[0]
 
     def data_summary(self):
         """
@@ -153,10 +179,14 @@ class Predictor(object):
             print("\t-", attr, ": numerical,", "[", self.min_values[attr], "/", self.max_values[attr], "]")
 
         if self.data_loaded:
-            print("\nInputs\n" + "-"*60 + "\n")
-            print(self.X.shape)
-            print("\nOutputs\n" + "-"*60 + "\n")
-            print(self.target.shape)
+            print("\nInputs", self.X.shape)
+            print("Outputs", self.target.shape)
+            print("Total number of experiments:", self.number_experiments)
+            print("Total number of samples:", self.number_samples)
+            print("Number of training samples:", self.number_training_samples)
+            print("Number of test samples:", self.number_validation_samples)
+            if self.validation_method == "leaveoneout":
+                print("Number of experiments in the test set:", self.number_test_experiments)
 
     # Rescales the output
     def _rescale_output(self, attr, y):
@@ -253,10 +283,11 @@ class Predictor(object):
         # Output layer
         model.add(tf.keras.layers.Dense(len(self.output_attributes)))
 
+
         # Compile
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=config['learning_rate']),
-            loss=tf.keras.losses.MeanSquaredError()
+            loss=tf.keras.losses.MeanSquaredError(),
         )
 
         return model
@@ -286,11 +317,30 @@ class Predictor(object):
         # Create the model
         model = self._create_model(config)
 
+        # Save the network with the best validation error
+        model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath="./tmp_model",
+            save_weights_only=True,
+            monitor='val_loss',
+            mode='min',
+            save_best_only=True,
+        )
+
         # Train
-        history = model.fit(self.X, self.target, validation_split=0.1, epochs=self.max_epochs, batch_size=self.batch_size, verbose=0)
+        history = model.fit(
+            self.X_train, self.y_train, 
+            validation_data=(self.X_test, self.y_test), 
+            epochs=self.max_epochs, 
+            batch_size=self.batch_size, 
+            callbacks=[model_checkpoint_callback],
+            verbose=0
+        )
+
+        # Reload the best weights
+        model.load_weights("./tmp_model")
 
         # Check performance
-        val_mse = history.history['val_loss'][-1]
+        val_mse = model.evaluate(self.X_test, self.y_test, batch_size=self.batch_size)
 
         # Save the best network
         if val_mse < self.best_mse:
@@ -416,17 +466,30 @@ class Predictor(object):
         if verbose:
             self.model.summary()
 
+        # Save the network with the best validation error
+        model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath="./tmp_model",
+            save_weights_only=True,
+            monitor='val_loss',
+            mode='min',
+            save_best_only=True,
+        )
+
         # Train
         history = self.model.fit(
-            self.X, self.target, 
-            validation_split=0.1, 
-            epochs=self.best_config['max_epochs'], 
-            batch_size=self.best_config['batch_size'], 
+            self.X_train, self.y_train, 
+            validation_data=(self.X_test, self.y_test), 
+            epochs=config['max_epochs'], 
+            batch_size=self.batch_size, 
+            callbacks=[model_checkpoint_callback],
             verbose=1 if verbose else 0
         )
 
+        # Reload the best weights
+        self.model.load_weights("./tmp_model")
+
         # Check performance
-        val_mse = history.history['val_loss'][-1]
+        val_mse = self.model.evaluate(self.X_test, self.y_test, batch_size=self.batch_size)
 
         # Save the best network
         self.best_mse = val_mse
@@ -451,19 +514,19 @@ class Predictor(object):
 
         # Training performance
         plt.figure()
-        plt.plot(self.best_history.history['loss'][:], label="training")
-        plt.plot(self.best_history.history['val_loss'][:], label="validation")
+        plt.plot(self.best_history.history['loss'][1:], label="training")
+        plt.plot(self.best_history.history['val_loss'][1:], label="validation")
         plt.xlabel("Epochs")
         plt.ylabel("mse")
         plt.title("Training performance")
         plt.legend()
         plt.savefig(self.save_path + "/training.png")
 
-        y = self.model.predict(self.X, batch_size=self.batch_size)
+        y = self.model.predict(self.X_test, batch_size=self.batch_size)
 
         for idx, attr in enumerate(self.output_attributes):
             plt.figure()
-            plt.scatter(self._rescale_output(attr, self.target[:, idx]), self._rescale_output(attr, y[:, idx]), s=1)
+            plt.scatter(self._rescale_output(attr, self.y_test[:, idx]), self._rescale_output(attr, y[:, idx]), s=1)
             plt.xlabel("Ground truth")
             plt.ylabel("Prediction")
             plt.title("Ground truth vs. prediction for " + attr)
@@ -471,7 +534,7 @@ class Predictor(object):
 
         for idx, attr in enumerate(self.output_attributes):
             plt.figure()
-            plt.hist(self._rescale_output(attr, self.target[:, idx]) - self._rescale_output(attr, y[:, idx]), bins=100)
+            plt.hist(self._rescale_output(attr, self.y_test[:, idx]) - self._rescale_output(attr, y[:, idx]), bins=100)
             plt.xlabel("Ground truth minus prediction")
             plt.ylabel(attr)
             plt.savefig(self.save_path + "/distribution_" + attr + ".png")

@@ -1,2 +1,7 @@
 data/
 site/
+*.DS_Store
+docs/*.ipynb
+*.ipynb_checkpoints*
+*__pycache__
+notebooks/models

@@ -1,6 +1,6 @@
-# Cut Predictor
+# Banana Predictor
 
-Tensorflow and optuna-based utility to learn to predict deviations from 1D position (or angles) based on a set of process parameters.
+Tensorflow and optuna-based utility to learn to predict several quantities (position, deviation, thickness) based on a set of process parameters of FEM experiments.
 
 ![](sliders.png)
 

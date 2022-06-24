@@ -9,6 +9,7 @@ dependencies:
   - pip
   - numpy 
   - pandas
+  - scikit-learn
   - matplotlib
   - ipywidgets
   - optuna

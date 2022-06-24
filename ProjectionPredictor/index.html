@@ -13,7 +13,7 @@
     
     
       
-        <title>ProjectionPredictor - Cut predictor</title>
+        <title>ProjectionPredictor - Banana predictor</title>
       
     
     
@@ -85,7 +85,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Cut predictor" class="md-header__button md-logo" aria-label="Cut predictor" data-md-component="logo">
+    <a href=".." title="Banana predictor" class="md-header__button md-logo" aria-label="Banana predictor" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -98,7 +98,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Cut predictor
+            Banana predictor
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -183,13 +183,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Cut predictor" class="md-nav__button md-logo" aria-label="Cut predictor" data-md-component="logo">
+    <a href=".." title="Banana predictor" class="md-nav__button md-logo" aria-label="Banana predictor" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
 
     </a>
-    Cut predictor
+    Banana predictor
   </label>
   
     <div class="md-nav__source">
@@ -771,14 +771,18 @@
 <span class="normal">158</span>
 <span class="normal">159</span>
 <span class="normal">160</span>
-<span class="normal">161</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">ProjectionPredictor</span><span class="p">(</span><span class="n">Predictor</span><span class="p">):</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">ProjectionPredictor</span><span class="p">(</span><span class="n">Predictor</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Regression method to predict 2D projections from process parameters.</span>
 
 <span class="sd">    Derives from Predictor, where more useful methods are defined.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Loads pandas Dataframes containing the data and preprocesses it.</span>
 
@@ -789,6 +793,8 @@
 <span class="sd">        :param position: position variables as a list. The name must match one column of the csv file.</span>
 <span class="sd">        :param output: output variable(s) to be predicted. The name must match one column of the csv file.</span>
 <span class="sd">        :param index: name of the column in doe and data representing the design ID (default: &#39;doe_id&#39;)</span>
+<span class="sd">        :param validation_split: percentage of the data used for validation (default: 0.1)</span>
+<span class="sd">        :param validation_method: method to split the data for validation, either &#39;random&#39; or &#39;leaveoneout&#39; (default: &#39;random&#39;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">has_config</span> <span class="o">=</span> <span class="kc">True</span>
@@ -810,6 +816,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">categorical_attributes</span> <span class="o">=</span> <span class="n">categorical</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">angle_input</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">doe_id</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validation_split</span> <span class="o">=</span> <span class="n">validation_split</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validation_method</span> <span class="o">=</span> <span class="n">validation_method</span>
 
         <span class="c1"># Process parameters</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_parameters</span><span class="p">(</span><span class="n">doe</span><span class="p">)</span>
@@ -944,7 +952,7 @@
 
 
 <h3 id="cut_predictor.Regressor2D.ProjectionPredictor.load_data" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">load_data</span><span class="p">(</span><span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">load_data</span><span class="p">(</span><span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">)</span></code>
 
 
 <a href="#cut_predictor.Regressor2D.ProjectionPredictor.load_data" class="headerlink" title="Permanent link">#</a></h3>
@@ -1028,6 +1036,24 @@
                 <code>&#39;doe_id&#39;</code>
           </td>
         </tr>
+        <tr>
+          <td><code>validation_split</code></td>
+          <td>
+          </td>
+          <td><p>percentage of the data used for validation (default: 0.1)</p></td>
+          <td>
+                <code>0.1</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>validation_method</code></td>
+          <td>
+          </td>
+          <td><p>method to split the data for validation, either 'random' or 'leaveoneout' (default: 'random')</p></td>
+          <td>
+                <code>&#39;random&#39;</code>
+          </td>
+        </tr>
     </tbody>
   </table>
 
@@ -1073,7 +1099,11 @@
 <span class="normal">53</span>
 <span class="normal">54</span>
 <span class="normal">55</span>
-<span class="normal">56</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">):</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Loads pandas Dataframes containing the data and preprocesses it.</span>
 
@@ -1084,6 +1114,8 @@
 <span class="sd">    :param position: position variables as a list. The name must match one column of the csv file.</span>
 <span class="sd">    :param output: output variable(s) to be predicted. The name must match one column of the csv file.</span>
 <span class="sd">    :param index: name of the column in doe and data representing the design ID (default: &#39;doe_id&#39;)</span>
+<span class="sd">    :param validation_split: percentage of the data used for validation (default: 0.1)</span>
+<span class="sd">    :param validation_method: method to split the data for validation, either &#39;random&#39; or &#39;leaveoneout&#39; (default: &#39;random&#39;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">has_config</span> <span class="o">=</span> <span class="kc">True</span>
@@ -1105,6 +1137,8 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">categorical_attributes</span> <span class="o">=</span> <span class="n">categorical</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">angle_input</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">doe_id</span> <span class="o">=</span> <span class="n">index</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">validation_split</span> <span class="o">=</span> <span class="n">validation_split</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">validation_method</span> <span class="o">=</span> <span class="n">validation_method</span>
 
     <span class="c1"># Process parameters</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_parameters</span><span class="p">(</span><span class="n">doe</span><span class="p">)</span>
@@ -1191,11 +1225,7 @@
 
         <details class="quote">
           <summary>Source code in <code>cut_predictor/Regressor2D.py</code></summary>
-          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 59</span>
-<span class="normal"> 60</span>
-<span class="normal"> 61</span>
-<span class="normal"> 62</span>
-<span class="normal"> 63</span>
+          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 63</span>
 <span class="normal"> 64</span>
 <span class="normal"> 65</span>
 <span class="normal"> 66</span>
@@ -1253,7 +1283,11 @@
 <span class="normal">118</span>
 <span class="normal">119</span>
 <span class="normal">120</span>
-<span class="normal">121</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Predicts the output variable for a given number of input positions (uniformly distributed between the min/max values of each input dimension used for training).</span>
 

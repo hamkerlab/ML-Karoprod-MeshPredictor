@@ -13,7 +13,7 @@
     
     
       
-        <title>Reference 3D - Cut predictor</title>
+        <title>Reference 3D - Banana predictor</title>
       
     
     
@@ -85,7 +85,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Cut predictor" class="md-header__button md-logo" aria-label="Cut predictor" data-md-component="logo">
+    <a href=".." title="Banana predictor" class="md-header__button md-logo" aria-label="Banana predictor" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -98,7 +98,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Cut predictor
+            Banana predictor
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -183,13 +183,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Cut predictor" class="md-nav__button md-logo" aria-label="Cut predictor" data-md-component="logo">
+    <a href=".." title="Banana predictor" class="md-nav__button md-logo" aria-label="Banana predictor" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
 
     </a>
-    Cut predictor
+    Banana predictor
   </label>
   
     <div class="md-nav__source">
@@ -1073,15 +1073,12 @@ Input variables:
 Output variable(s):
     - deviation : numerical, [ -3.4451234340667702 / 8.456118583679201 ]
 
-Inputs
-------------------------------------------------------------
-
-(25043148, 16)
-
-Outputs
-------------------------------------------------------------
-
-(25043148, 1)
+Inputs (25043148, 16)
+Outputs (25043148, 1)
+Total number of experiments: 879
+Total number of samples: 25043148
+Number of training samples: 22538833
+Number of test samples: 2504315
 </code>
 </pre>
 </div>
@@ -1224,15 +1221,35 @@ Validation mse: 0.00010045373346656561
 <div class="output_wrapper">
 <div class="output">
 <div class="output_area">
-<div class="output_subarea output_stream output_stdout output_text">
+<div class="output_subarea output_text output_error">
 <pre>
-<code>Metal device set to: Apple M1 Pro
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">OSError</span>                                   Traceback (most recent call last)
+<span class="ansi-green-fg">/var/folders/6w/6msx49ws7k13cc0bbys0tt4m0000gn/T/ipykernel_73526/2874831485.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>reg<span class="ansi-blue-fg">.</span>load_network<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;best_3d_model&#39;</span><span class="ansi-blue-fg">)</span>
 
-systemMemory: 16.00 GB
-maxCacheSize: 5.33 GB
+<span class="ansi-green-fg">~/Research/Projects/ml@karoprod/cut_predictor/src/cut_predictor/Predictor.py</span> in <span class="ansi-cyan-fg">load_network</span><span class="ansi-blue-fg">(self, load_path, batch_size)</span>
+<span class="ansi-green-intense-fg ansi-bold">    555</span>         self<span class="ansi-blue-fg">.</span>save_path <span class="ansi-blue-fg">=</span> load_path
+<span class="ansi-green-intense-fg ansi-bold">    556</span> 
+<span class="ansi-green-fg">--&gt; 557</span><span class="ansi-red-fg">         </span>self<span class="ansi-blue-fg">.</span>model <span class="ansi-blue-fg">=</span> tf<span class="ansi-blue-fg">.</span>keras<span class="ansi-blue-fg">.</span>models<span class="ansi-blue-fg">.</span>load_model<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>save_path<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    558</span> 
+<span class="ansi-green-intense-fg ansi-bold">    559</span>     <span class="ansi-green-fg">def</span> compare<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> doe_id<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
 
-</code>
-</pre>
+<span class="ansi-green-fg">~/Applications/miniforge3/envs/tf/lib/python3.9/site-packages/keras/utils/traceback_utils.py</span> in <span class="ansi-cyan-fg">error_handler</span><span class="ansi-blue-fg">(*args, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">     65</span>     <span class="ansi-green-fg">except</span> Exception <span class="ansi-green-fg">as</span> e<span class="ansi-blue-fg">:</span>  <span class="ansi-red-fg"># pylint: disable=broad-except</span>
+<span class="ansi-green-intense-fg ansi-bold">     66</span>       filtered_tb <span class="ansi-blue-fg">=</span> _process_traceback_frames<span class="ansi-blue-fg">(</span>e<span class="ansi-blue-fg">.</span>__traceback__<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">---&gt; 67</span><span class="ansi-red-fg">       </span><span class="ansi-green-fg">raise</span> e<span class="ansi-blue-fg">.</span>with_traceback<span class="ansi-blue-fg">(</span>filtered_tb<span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">from</span> <span class="ansi-green-fg">None</span>
+<span class="ansi-green-intense-fg ansi-bold">     68</span>     <span class="ansi-green-fg">finally</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">     69</span>       <span class="ansi-green-fg">del</span> filtered_tb
+
+<span class="ansi-green-fg">~/Applications/miniforge3/envs/tf/lib/python3.9/site-packages/keras/saving/save.py</span> in <span class="ansi-cyan-fg">load_model</span><span class="ansi-blue-fg">(filepath, custom_objects, compile, options)</span>
+<span class="ansi-green-intense-fg ansi-bold">    207</span>         <span class="ansi-green-fg">if</span> isinstance<span class="ansi-blue-fg">(</span>filepath<span class="ansi-blue-fg">,</span> str<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    208</span>           <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> tf<span class="ansi-blue-fg">.</span>io<span class="ansi-blue-fg">.</span>gfile<span class="ansi-blue-fg">.</span>exists<span class="ansi-blue-fg">(</span>filepath<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 209</span><span class="ansi-red-fg">             </span><span class="ansi-green-fg">raise</span> IOError<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">f&#39;No file or directory found at {filepath}&#39;</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    210</span>           <span class="ansi-green-fg">if</span> saving_utils<span class="ansi-blue-fg">.</span>is_hdf5_filepath<span class="ansi-blue-fg">(</span>filepath<span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">and</span> h5py <span class="ansi-green-fg">is</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    211</span>             raise ImportError(
+
+<span class="ansi-red-fg">OSError</span>: No file or directory found at best_3d_model</pre>
 </div>
 </div>
 </div>

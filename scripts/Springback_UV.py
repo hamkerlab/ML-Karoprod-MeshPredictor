@@ -6,7 +6,7 @@ from cut_predictor import ProjectionPredictor
 
 doe = pd.read_csv('../data/doe.csv')
 
-data = pd.read_csv('../data/springback_uvmap.csv')
+data = pd.read_csv('../data/springback_uvmap2.csv')
 data.drop(data[data.doe_id == 1000].index, inplace=True)
 data.drop(data[data.doe_id == 247].index, inplace=True)
 
@@ -41,8 +41,8 @@ best_config = reg.autotune(
     trials=100,
     max_epochs=50, 
     layers=[4, 6],
-    neurons=[64, 256, 64],
-    dropout=[0.0, 0.5, 0.1],
+    neurons=[128, 512, 64],
+    dropout=[0.0, 0.0, 0.1],
     learning_rate=[1e-5, 1e-3]
 )
 print(best_config)

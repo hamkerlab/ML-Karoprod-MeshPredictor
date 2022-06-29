@@ -136,11 +136,15 @@ class Predictor(object):
 
         elif self.validation_method == "leaveoneout":
 
-            test_experiments = np.random.choice(self.doe_ids, size=int(self.number_experiments*self.validation_split), replace=False)
-            self.number_test_experiments = len(test_experiments)
-            test_indices = self.df_raw[self.df_raw[self.doe_id].isin(test_experiments)].index.to_numpy() -1
+            self.test_experiments = np.random.choice(self.doe_ids, size=int(self.number_experiments*self.validation_split), replace=False)
+
+            self.number_test_experiments = len(self.test_experiments)
+
+            #test_indices = self.df_raw[self.df_raw[self.doe_id].isin(test_experiments)].index.values.to_numpy() - 1
+            test_indices = np.flatnonzero(self.df_raw[self.doe_id].isin(self.test_experiments))
+            
             train_indices = np.ones(self.number_samples, dtype=bool)
-            train_indices[test_indices,] = False
+            train_indices[test_indices] = False
             
             self.X_train = self.X[train_indices, :]
             self.X_test = self.X[test_indices, :]

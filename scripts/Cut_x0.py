@@ -34,10 +34,12 @@ reg.load_data(
     validation_method='leaveoneout'
 )
 
+reg.save_config("cut_x0.pkl")
+
 config = {
-    'batch_size': 4096*2,
+    'batch_size': 4096*8,
     'max_epochs': 100,
-    'layers': [128, 128, 128, 128, 128],
+    'layers': [256, 256, 256, 256, 256],
     'dropout': 0.0,
     'learning_rate': 0.001
 }

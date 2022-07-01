@@ -51,7 +51,7 @@ reg.save_config("springback_uvmap_thickness.pkl")
 # print(best_config)
 
 config = {
-    'batch_size': 2048*16,
+    'batch_size': 4096*8,
     'max_epochs': 100,
     'layers': [256, 256, 256, 256, 256],
     'dropout': 0.0,

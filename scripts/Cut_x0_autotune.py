@@ -34,14 +34,16 @@ reg.load_data(
     validation_method='leaveoneout'
 )
 
-config = {
-    'batch_size': 4096*2,
-    'max_epochs': 100,
-    'layers': [128, 128, 128, 128, 128],
-    'dropout': 0.0,
-    'learning_rate': 0.001
-}
+reg.save_config("cut_x0.pkl")
 
+best_config = reg.autotune(
+    save_path='models/best_x0_model',
+    trials=100,
+    max_epochs=20, 
+    layers=[4, 6],
+    neurons=[128, 256, 64],
+    dropout=[0.0, 0.0, 0.1],
+    learning_rate=[1e-5, 1e-3]
+)
 
-reg.custom_model(save_path='models/best_x0_model', config=config, verbose=True)
-
+print(best_config)

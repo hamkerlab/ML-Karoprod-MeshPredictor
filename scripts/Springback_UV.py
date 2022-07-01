@@ -35,6 +35,9 @@ reg.load_data(
     validation_split=0.1,
     validation_method='leaveoneout'
 )
+reg.data_summary()
+
+reg.save_config("springback_uvmap.pkl")
 
 # best_config = reg.autotune(
 #     save_path='models/best_3d_model',

@@ -2,9 +2,9 @@
 
 The data should be passed to the CutPredictor as `pandas` data frames. Each experiment (or simulation) with a unique ID 'doe_id' consists of:
 
-* a set of $d$ process parameters defining the experiment (definition of the material, force applied, etc).
-* a 1D position regularly sampled along some axis ($m$ points).
-* a resulting output variable (such as a deviation) for each position.
+* A set of $d$ process parameters defining the experiment (definition of the material, force applied, etc).
+* 1D, 2D or 3D positions in the corresponding space.
+* The resulting output variables (such as a deviation) for each position.
 
 The goal is for example to learn to predict the deviation for any position, given a set of (new) process parameters.
 
@@ -15,15 +15,17 @@ Taking the example of the x0 cut in the `Cut_x0.ipynb` notebook, the process par
 * Ziehspalt
 * Einlegeposition
 * Ziehtiefe
+* Stempel_ID
 
-the position is `tp` and the value to predict is `deviationc`. 
+
+the 1D position is `tp` and the only value to predict is `deviationc`. 
 
 ![Example for a single set of process parameters.](x0.png)
 
 Two data frames should be prepared:
 
 1. A `doe` data frame for the $d$ process parameters, including a unique ID per experiment.
-2. A `data` data frame for the 1D values, with a unique experiment ID for each sample.
+2. A `data` data frame for the positions and outputs, with a unique experiment ID for each sample.
 
 The `doe` data frame should look like:
 

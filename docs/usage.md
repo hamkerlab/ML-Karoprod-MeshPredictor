@@ -1,8 +1,16 @@
 # Usage
 
+Three prediction objects are provided depending on the dimensionality of the input positions:
+
+1. `CutPredictor` for 1D positions.
+2. `ProjectionPredictor` for 2D positions.
+3. `MeshPredictor` for 3D positions. 
+
+They only differ for a few methods, such as `load_data()` and `predict()`. Most methods are common, so we focus here on the 1D case with `CutPredictor`.
+
 ## Loading the data
 
-Once the data is loaded as pandas Dataframes, it can be loaded into the `CutPredictor` object:
+Once the data is loaded as pandas Dataframes, it can be passed to the `CutPredictor` object:
 
 ```python
 reg = CutPredictor()
@@ -16,11 +24,13 @@ reg.load_data(
         'Ziehspalt', 
         'Einlegeposition', 
         'Ziehtiefe'
+        'Stempel_ID',
     ],
     categorical = [
         'Ziehspalt', 
         'Einlegeposition', 
         'Ziehtiefe'
+        'Stempel_ID',
     ],
     position = 'tp',
     output = 'deviationc',
@@ -28,7 +38,7 @@ reg.load_data(
 )
 ```
 
-One has to specify among all the columns present in the frames which ones are process parameters, which one is the input position and which one(s) is the output. If several output variables should be predicted, a list of names should be given. The name of the column contining the experiment ID should be provided.
+One has to specify among all the columns present in the frames which ones are to be used as process parameters, which one is the input position and which one(s) is the output. If several output variables should be predicted, a list of names should be given. The name of the column containing the experiment ID should be provided.
 
 Optionally, one can specify which process parameter is categorical (as opposed to numerical), i.e. takes discrete values. This only influences the training of the neural network, as categorical attributes are then one-hot encoded before being passed to the NN. This is however optional.
 
@@ -104,30 +114,50 @@ reg.custom_model(save_path='best_model', config=config, verbose=True)
 
 The model's weights are saved in `best_model/`.
 
-## Visualizing the results
+## Single prediction
 
-To make a prediction for a (potentially new) set of process parameters, simply pass them to the `predict()` method as a dictionary:
+To make a prediction for a (potentially new) set of process parameters, simply pass them as a dictionary to the `predict()` method:
 
 
 ```python
 x, y = reg.predict({
         'Blechdicke': 1.01, 
         'Niederhalterkraft': 410.0, 
-        'Ziehspalt':2.4, 
+        'Ziehspalt': 2.4, 
         'Einlegeposition': -5, 
-        'Ziehtiefe': 30
+        'Ziehtiefe': 30,
+        'Stempel_ID': 3
     }, 
-    nb_points=1000)
+    positions=1000)
 ```
 
-This will return 1000 values of the position `x` as well as the corresponding predicted output `y`.
+This will return 1000 values of the position `x` as well as the corresponding predicted outputs `y` (shape (1000, d), where d is the number of output variables).
 
-In a Jupyter notebook, you can use the `interactive()` method to get sliders for the process parameters and interactively visualize the predictions:
+The `positions` argument depends on the class:
+
+* For `CutPredictor`, it represents the number of points uniformly sampled between the min/max values of the position parameter.
+* For `ProjectionPredictor`, it must be a tuple (m, n) for the shape of the sampled 2D positions, uniformly between the min/max values of those parameters.
+* For `MeshPredictor`, it must be a (N, 3) numpy array of 3D coordinates for the N points where the prediction should be made.
+
+## Interactive visualization
+
+In a Jupyter notebook, you can use the `interactive()` method to get sliders for the process parameters and interactively visualize the predictions.
+
+You first need to define a visualization method:
 
 ```python
-%matplotlib inline # necessary
-plt.rcParams['figure.dpi'] = 150 # bigger figures
-reg.interactive()
+def viz(x, y):
+    plt.figure()
+    plt.plot(x, y[:, 0])
+    plt.xlabel('tp')
+    plt.ylabel('deviationc')
+```
+
+and pass it to the method, together with the same `positions` argument as for the `predict()` method:
+
+```python
+%matplotlib inline # necessary in notebooks
+reg.interactive(function=viz, positions=100)
 ```
 
 ![](sliders.png)
@@ -139,14 +169,14 @@ Once a suitable model has been trained on the data and saved in 'best_model', it
 If you do not want the data to be loaded for the prediction, you should save the data-related parameters (min/max values of the attributes, etc) in a pickle file:
 
 ```python
-reg.save_config("network.pkl")
+reg.save_config("data.pkl")
 ```
 
 This way, you can recreate a `CutPredictor` object without loading the data in memory:
 
 ```python
 reg = CutPredictor()
-reg.load_config("network.pkl")
+reg.load_config("data.pkl")
 ```
 
 and finally load the weights of the trained model:
@@ -155,3 +185,25 @@ and finally load the weights of the trained model:
 reg.load(load_path='best_model')
 ```
 
+## Optimization of the process parameters
+
+Once a model is trained or loaded, it can be used to predict which value of the process parameters minimize a user-defined criterion.
+
+For example, if you want to minimize the average deviation over the 1D cut, you can define the following function:
+
+```python
+def mean_deviation(x, y):
+    return y[:, 0].mean()
+```
+
+where `x` are the sampled input positions (useful if you want to restrict the objective function to a particular part of the input space) and `y` is a numpy array containing the predicted values for each output variable.
+
+You can then pass this function to `optimize()`, which will sample the process parameters using Bayesian optimization (optuna) to find out the values that minimize the obective:
+
+```python
+params = reg.optimize(mean_deviation, positions=100, nb_trials=1000)
+```
+
+The `positions` should have the same meaning as for the `predict()` method, depending on the actual class. 
+
+`nb_trials` specifies how many predictions will be made, the more the better.

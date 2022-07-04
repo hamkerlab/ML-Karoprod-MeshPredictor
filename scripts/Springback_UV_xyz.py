@@ -37,7 +37,7 @@ reg.load_data(
 )
 reg.data_summary()
 
-reg.save_config("springback_uvmap_xyz.pkl")
+reg.save_config("../models/springback_uvmap_xyz.pkl")
 
 # best_config = reg.autotune(
 #     save_path='models/best_3d_model',
@@ -59,5 +59,5 @@ config = {
     'activation': 'lrelu'
 }
 
-reg.custom_model(save_path='models/best_uv_xyz_model', config=config, verbose=True)
+reg.custom_model(save_path='../models/best_uv_xyz_model', config=config, verbose=True)
 reg.training_summary()

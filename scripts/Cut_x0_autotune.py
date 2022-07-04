@@ -34,10 +34,10 @@ reg.load_data(
     validation_method='leaveoneout'
 )
 
-reg.save_config("cut_x0.pkl")
+reg.save_config("../models/cut_x0.pkl")
 
 best_config = reg.autotune(
-    save_path='models/best_x0_model',
+    save_path='../models/best_x0_model',
     trials=100,
     max_epochs=20, 
     layers=[4, 6],

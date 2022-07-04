@@ -38,7 +38,7 @@ reg.load_data(
 
 
 best_config = reg.autotune(
-    save_path='models/best_flange_model',
+    save_path='../models/best_flange_model',
     trials=100,
     max_epochs=100, 
     layers=[4, 6],

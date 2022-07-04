@@ -34,10 +34,10 @@ reg.load_data(
     validation_method='leaveoneout'
 )
 
-reg.save_config("cut_x0.pkl")
+reg.save_config("../models/cut_x0.pkl")
 
 config = {
-    'batch_size': 4096*8,
+    'batch_size': 2048,
     'max_epochs': 100,
     'layers': [256, 256, 256, 256, 256],
     'dropout': 0.0,
@@ -45,5 +45,5 @@ config = {
 }
 
 
-reg.custom_model(save_path='models/best_x0_model', config=config, verbose=True)
+reg.custom_model(save_path='../models/best_x0_model', config=config, verbose=True)
 

@@ -631,3 +631,55 @@ class Predictor(object):
 
         self._visualization_function(x, y)
         
+
+    def optimize(self, objective, positions, nb_trials):
+        """
+        Returns the process parameters that minimize the provided objective function.
+
+        The objective function must take two parameters `x` and `y` where `x` are input positions and `y` the predictions. It must return one value, the "cost" of that simulation.
+
+        ```python
+        def mean_deviation(x, y):
+            return y[:, 0].mean()
+
+        params = reg.optimize(mean_deviation, positions=100, nb_trials=1000)
+        ```
+
+        :param objective: objective function to be minimized.
+        :param positions: input positions for the prediction. Must be the same as for `predict()` depending on the class.
+        :param nb_trials: number of optimization trials.
+        """
+        self._optimize_function = objective
+        self._optimize_positions = positions
+
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        self.study = optuna.create_study(direction='minimize')
+        self.study.optimize(self._optimize, n_trials=nb_trials, show_progress_bar=True)
+
+        print("Best parameters:", self.study.best_params)
+        print("Achieved objective:", self.study.best_value)
+
+        return self.study.best_params
+
+    def _optimize(self, trial):
+
+        process_parameters = {}
+
+        for attr in self.process_parameters:
+
+            if attr in self.categorical_attributes:
+
+                values = self.categorical_values[attr]
+                for i, v in enumerate(values):
+                    if isinstance(v, np.int64):
+                        values[i] = int(v)
+
+                process_parameters[attr] = trial.suggest_categorical(attr, values)
+            else:
+                process_parameters[attr] = trial.suggest_float(attr, self.min_values[attr], self.max_values[attr])
+
+        x, y = self.predict(process_parameters, self._optimize_positions)
+
+        res = self._optimize_function(x, y)
+
+        return res

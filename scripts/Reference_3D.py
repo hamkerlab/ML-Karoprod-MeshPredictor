@@ -35,7 +35,7 @@ reg.load_data(
 )
 
 best_config = reg.autotune(
-    save_path='models/best_3d_model',
+    save_path='../models/best_3d_model',
     trials=100,
     max_epochs=50, 
     layers=[4, 6],

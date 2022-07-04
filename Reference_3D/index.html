@@ -1098,7 +1098,7 @@ Number of test samples: 2504315
     <span class="s1">&#39;activation&#39;</span><span class="p">:</span> <span class="s1">&#39;lrelu&#39;</span>
 <span class="p">}</span>
 
-<span class="n">reg</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="n">save_path</span><span class="o">=</span><span class="s1">&#39;best_3d_model&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="n">save_path</span><span class="o">=</span><span class="s1">&#39;../models/best_3d_model&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">reg</span><span class="o">.</span><span class="n">training_summary</span><span class="p">()</span>
 </code></pre></div>
 
@@ -1214,7 +1214,7 @@ Validation mse: 0.00010045373346656561
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 
-<div class="highlight"><pre><span></span><code><span class="n">reg</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="s1">&#39;best_3d_model&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">reg</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="s1">&#39;../models/best_3d_model&#39;</span><span class="p">)</span>
 </code></pre></div>
 
 </div>

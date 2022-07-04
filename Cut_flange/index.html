@@ -1043,7 +1043,7 @@ Number of experiments in the test set: 87
 <div class="input">
 
 <div class="highlight"><pre><span></span><code><span class="n">best_config</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">autotune</span><span class="p">(</span>
-    <span class="n">save_path</span><span class="o">=</span><span class="s1">&#39;models/best_flange_model&#39;</span><span class="p">,</span>
+    <span class="n">save_path</span><span class="o">=</span><span class="s1">&#39;../models/best_flange_model&#39;</span><span class="p">,</span>
     <span class="n">trials</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
     <span class="n">max_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> 
     <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
@@ -1069,7 +1069,7 @@ Number of experiments in the test set: 87
 
 <span class="c1"># or best_config from autotune if you already did it once</span>
 
-<span class="n">reg</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="n">save_path</span><span class="o">=</span><span class="s1">&#39;models/best_flange_model&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="n">save_path</span><span class="o">=</span><span class="s1">&#39;../models/best_flange_model&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">reg</span><span class="o">.</span><span class="n">training_summary</span><span class="p">()</span>
 </code></pre></div>
 

@@ -508,9 +508,9 @@
 <h1 id="data-preparation">Data preparation<a class="headerlink" href="#data-preparation" title="Permanent link">#</a></h1>
 <p>The data should be passed to the CutPredictor as <code>pandas</code> data frames. Each experiment (or simulation) with a unique ID 'doe_id' consists of:</p>
 <ul>
-<li>a set of <span class="arithmatex">\(d\)</span> process parameters defining the experiment (definition of the material, force applied, etc).</li>
-<li>a 1D position regularly sampled along some axis (<span class="arithmatex">\(m\)</span> points).</li>
-<li>a resulting output variable (such as a deviation) for each position.</li>
+<li>A set of <span class="arithmatex">\(d\)</span> process parameters defining the experiment (definition of the material, force applied, etc).</li>
+<li>1D, 2D or 3D positions in the corresponding space.</li>
+<li>The resulting output variables (such as a deviation) for each position.</li>
 </ul>
 <p>The goal is for example to learn to predict the deviation for any position, given a set of (new) process parameters.</p>
 <p>Taking the example of the x0 cut in the <code>Cut_x0.ipynb</code> notebook, the process parameters may be:</p>
@@ -520,13 +520,14 @@
 <li>Ziehspalt</li>
 <li>Einlegeposition</li>
 <li>Ziehtiefe</li>
+<li>Stempel_ID</li>
 </ul>
-<p>the position is <code>tp</code> and the value to predict is <code>deviationc</code>. </p>
+<p>the 1D position is <code>tp</code> and the only value to predict is <code>deviationc</code>. </p>
 <p><img alt="Example for a single set of process parameters." src="../x0.png" /></p>
 <p>Two data frames should be prepared:</p>
 <ol>
 <li>A <code>doe</code> data frame for the <span class="arithmatex">\(d\)</span> process parameters, including a unique ID per experiment.</li>
-<li>A <code>data</code> data frame for the 1D values, with a unique experiment ID for each sample.</li>
+<li>A <code>data</code> data frame for the positions and outputs, with a unique experiment ID for each sample.</li>
 </ol>
 <p>The <code>doe</code> data frame should look like:</p>
 <table>

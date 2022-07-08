@@ -36,6 +36,8 @@ reg.load_data(
     position_scaler='minmax'
 )
 
+reg.save_config("../models/projection.pkl")
+
 best_config = reg.autotune(
     save_path='../models/best_projection_model',
     trials=100,

@@ -1,4 +1,4 @@
-site_name: Cut predictor
+site_name: Banana predictor
 
 theme:
   name: material
@@ -51,8 +51,14 @@ nav:
   - 'datapreparation.md'
   - 'usage.md'
   - API:
+    - 'Predictor.md'
     - 'CutPredictor.md'
+    - 'ProjectionPredictor.md'
+    - 'MeshPredictor.md'
   - Examples:
     - 'Cut_x0.ipynb'
     - 'Cut_web.ipynb'
     - 'Cut_flange.ipynb'
+    - 'Projection_2D.ipynb'
+    - 'Reference_3D.ipynb'
+    - 'Springback_UV.ipynb'

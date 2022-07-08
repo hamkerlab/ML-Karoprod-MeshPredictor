@@ -1,0 +1,9 @@
+data/
+site/
+models/
+*.DS_Store
+docs/*.ipynb
+*.ipynb_checkpoints*
+*__pycache__
+*.pkl
+src/cut_predictor.egg-info/

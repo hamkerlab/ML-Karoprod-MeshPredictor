@@ -1,6 +1,8 @@
-# Cut predictor
+# Banana predictor
 
-Tensorflow and optuna-based utility to learn to predict deviations from 1D position (or angles) based on a set of process parameters.
+Tensorflow and optuna-based utility to learn to predict several quantities (position, deviation, thickness) based on a set of process parameters of FEM experiments.
+
+![](docs/sliders.png)
 
 The documentation is at <https://hamkerlab.github.io/ML-Karoprod-CutPredictor/>. 
 

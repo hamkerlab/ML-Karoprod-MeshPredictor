@@ -32,7 +32,7 @@ reg.load_data(
         'Rp0',
     ], 
     position = ['u', 'v'], 
-    output = ['x', 'y', 'z'], 
+    output = ['thickness', 'epseqpl', 'thinning'], 
     categorical_joining=[
     ], 
     categorical_single= [
@@ -47,7 +47,7 @@ reg.load_data(
     validation_method="random"
 
 )
-reg.save_config("../models/joining_xyz.pkl")
+reg.save_config("../models/joining_thickness.pkl")
 
 config = {
     'batch_size': 2048*16,
@@ -58,4 +58,4 @@ config = {
     'activation': 'lrelu'
 }
 
-reg.custom_model(save_path='../models/best_joining_xyz_model', config=config, verbose=True)
+reg.custom_model(save_path='../models/best_joining_thickness_model', config=config, verbose=True)

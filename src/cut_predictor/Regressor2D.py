@@ -13,19 +13,20 @@ class ProjectionPredictor(Predictor):
     Derives from Predictor, where more useful methods are defined.
     """
         
-    def load_data(self, doe, data, process_parameters, position, output, categorical=[], index='doe_id', validation_split=0.1, validation_method="random"):
+    def load_data(self, doe, data, process_parameters, position, output, categorical=[], index='doe_id', validation_split=0.1, validation_method="random", position_scaler='normal'):
         """
         Loads pandas Dataframes containing the data and preprocesses it.
 
         :param doe: pandas.Dataframe object containing the process parameters (design of experiments table).
         :param data: pandas.Dataframe object containing the experiments.
-        :param process_parameters: list of process parameters to be used. The names must match the columns of the csv file.
-        :param categorical: list of process parameters that should be considered as categorical nad one-hot encoded.
-        :param position: position variables as a list. The name must match one column of the csv file.
-        :param output: output variable(s) to be predicted. The name must match one column of the csv file.
+        :param process_parameters: list of process parameters to be used. The names must match the columns of the data file.
+        :param categorical: list of process parameters that should be considered as categorical and one-hot encoded.
+        :param position: position variables as a list. The names must match the columns of the csv file.
+        :param output: output variable(s) to be predicted. The names must match the columns of the data file.
         :param index: name of the column in doe and data representing the design ID (default: 'doe_id')
         :param validation_split: percentage of the data used for validation (default: 0.1)
         :param validation_method: method to split the data for validation, either 'random' or 'leaveoneout' (default: 'random')
+        :param position_scaler: normalization applied to the position attributes ('minmax' or 'normal', default 'normal')
         """
 
         self.has_config = True
@@ -46,6 +47,8 @@ class ProjectionPredictor(Predictor):
         
         self.categorical_attributes = categorical
         self.angle_input = False
+        self.position_scaler = position_scaler
+
         self.doe_id = index
         self.validation_split = validation_split
         self.validation_method = validation_method
@@ -109,8 +112,10 @@ class ProjectionPredictor(Predictor):
         positions = np.array([[i, j] for i in x for j in y])
 
         for i, attr in enumerate(self.position_attributes):
-            
-            values = (positions[:, i] - self.mean_values[attr] ) / self.std_values[attr]
+            if self.position_scaler == 'normal':
+                values = (positions[:, i] - self.mean_values[attr] ) / self.std_values[attr]
+            else:
+                values = (positions[:, i] - self.min_values[attr] ) / (self.max_values[attr] - self.min_values[attr])
             X = np.concatenate((X, values.reshape((nb_points, 1))), axis=1)
 
 
@@ -165,3 +170,53 @@ class ProjectionPredictor(Predictor):
             plt.tight_layout()
 
 
+
+    def compare_xyz(self, doe_id):
+        """
+        Creates a 3D point cloud compring the ground truth and the prediction on a provided experiment. 
+
+        Works only when the output variables are [x, y, z] coordinates.
+
+        :param doe_id: id of the experiment.
+        """
+
+        if self.model is None:
+            print("Error: no model has been trained yet.")
+            return
+
+        if not doe_id in self.doe_ids:
+            print("The experiment", doe_id, 'is not in the dataset.')
+            return
+
+        indices = self.df_raw[self.df_raw[self.doe_id]==doe_id].index.to_numpy()
+        
+        N = len(indices)
+        X = self.X[indices, :]
+        t = self.target[indices, :]
+        for idx, attr in enumerate(self.output_attributes):
+            t[:, idx] = self._rescale_output(attr, t[:, idx])
+
+        y = self.model.predict(X, batch_size=self.batch_size)
+
+        for idx, attr in enumerate(self.output_attributes):
+            y[:, idx] = self._rescale_output(attr, y[:, idx])
+
+
+        fig = plt.figure()
+        ax = fig.add_subplot(121, projection='3d')
+        ax.set_title("Ground truth")
+        p = ax.scatter(
+            t[:, 0],  
+            t[:, 1],
+            t[:, 2],
+            s=0.005
+        )
+        ax = fig.add_subplot(122, projection='3d')
+        ax.set_title("Prediction")
+        p = ax.scatter(
+            y[:, 0],  
+            y[:, 1],
+            y[:, 2],
+            s=0.005
+        )
+ 

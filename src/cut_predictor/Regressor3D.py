@@ -13,7 +13,7 @@ class MeshPredictor(Predictor):
     Derives from Predictor, where more useful methods are defined.
     """
         
-    def load_data(self, doe, data, process_parameters, position, output, categorical=[], index='doe_id', validation_split=0.1, validation_method="random"):
+    def load_data(self, doe, data, process_parameters, position, output, categorical=[], index='doe_id', validation_split=0.1, validation_method="random", position_scaler='normal'):
         """
         Loads pandas Dataframes containing the data and preprocesses it.
 
@@ -26,6 +26,7 @@ class MeshPredictor(Predictor):
         :param index: name of the column in doe and data representing the design ID (default: 'doe_id')
         :param validation_split: percentage of the data used for validation (default: 0.1)
         :param validation_method: method to split the data for validation, either 'random' or 'leaveoneout' (default: 'random')
+        :param position_scaler: normalization applied to the position attributes ('minmax' or 'normal', default 'normal')
         """
 
         self.has_config = True
@@ -46,6 +47,8 @@ class MeshPredictor(Predictor):
         
         self.categorical_attributes = categorical
         self.angle_input = False
+        self.position_scaler = position_scaler
+        
         self.doe_id = index
         self.validation_split = validation_split
         self.validation_method = validation_method
@@ -103,7 +106,11 @@ class MeshPredictor(Predictor):
         # Position attributes are last
         for i, attr in enumerate(self.position_attributes):
             
-            values = (positions[:, i] - self.mean_values[attr] ) / self.std_values[attr]
+            if self.position_scaler == 'normal':
+                values = (positions[:, i] - self.mean_values[attr] ) / self.std_values[attr]
+            else:
+                values = (positions[:, i] - self.min_values[attr] ) / (self.max_values[attr] - self.min_values[attr])
+                
             X = np.concatenate((X, values.reshape((nb_points, 1))), axis=1)
 
 

@@ -21,17 +21,17 @@ reg.load_data(
         'Ziehspalt', 
         'Einlegeposition', 
         'Ziehtiefe',
-        'Stempel_ID',
+        'Rp0',
     ],
     categorical = [
         'Ziehspalt', 
         'Ziehtiefe',
-        'Stempel_ID',
     ],
     position = 'tp',
     output = ['deviationc'],
     validation_split=0.1,
-    validation_method='leaveoneout'
+    validation_method='leaveoneout',
+    position_scaler='minmax'
 )
 
 reg.save_config("../models/cut_x0.pkl")

@@ -11,6 +11,23 @@ import matplotlib.pyplot as plt
 import os
 
 
+pt_fix = [["F2", 70,-5], ["F1", -70,-5]]
+pt_fix = pd.DataFrame(pt_fix, columns=["label", "x", "y"])
+pt_clamp = [["C3", -79.8022,67.8198],
+            ["C1", 79.8022,67.8198],
+            ["C4", -59.3437,-77.7498],
+            ["C2", 59.3437,-77.7498],
+           ]
+pt_clamp = pd.DataFrame(pt_clamp, columns=["label", "x", "y"])
+pt_joint = [["J1", 0, 70.015751778],
+            ["J2", 0,-69.86424822],
+            ["J3", 119.2510176803,-86.72841283205],
+            ["J4", 158.03169048424,47.66829044418],
+            ["J5", -119.2510176803,-86.7284128319],
+            ["J6", -158.0316904842,47.668290444327],
+           ]
+pt_joint = pd.DataFrame(pt_joint, columns=["label", "x", "y"])
+
 def get_x0cut_inter(x0cut, n=10000):
     x0cut = x0cut[["y", "z"]].drop_duplicates()
     tck, u = scipy.interpolate.splprep([x0cut.y.values, x0cut.z.values], s=0, k=3)
@@ -201,6 +218,143 @@ def zt2ref(df, zt_source, zt_target=50, rb=5, rt=3):
     return dfn
 
 
+class Part:
+    """Part
+
+    """
+
+
+    def __init__(self, name, thickness=0., designid=0, zt=0., mesh=None):
+        self.name = name
+        self.nodes = None
+        self.elements = None
+        self.contour = None
+        self.thickness = thickness
+        self.designid = designid
+        self.zt = zt
+        self.parameter = {}
+        # self.df_node_results = None#self.mesh.nodes[["nid"]].copy()
+        # self.df_element_results = None#self.mesh.nodes[["elid"]].copy()
+
+class Banana:
+    def __init__(self, designid, h5filepath, fit=False):
+        self.parameter = {}
+        self.designid = designid
+        self.part_top = Part(name="part_top")
+        self.part_bot = Part(name="part_bot")
+
+
+    @classmethod
+    def from_h5(cls, design, h5filepath):
+        model = cls(design, h5filepath)
+
+        model.parameter = {}
+        part_top = model.part_top
+        part_bot = model.part_bot
+
+        with pd.HDFStore(h5filepath, mode="r") as store:
+            #print(store.keys())
+            #part_top.df_node_results = store.get(f'/part_top/df_node_results')
+            part_top.nodes = store.get(f'/part_top/nodes')
+            part_top.elements = store.get(f'/part_top/elements')
+            part_top.contour = store.get(f'/part_top/contour')
+            part_top.simplices = np.array(store.get(f'/part_top/simplices').values.tolist())
+
+            #part_bot.df_node_results = store.get(f'/part_bot/df_node_results')
+            part_bot.nodes = store.get(f'/part_bot/nodes')
+
+            part_bot.elements = store.get(f'/part_bot/elements')
+            part_bot.contour = store.get(f'/part_bot/contour')
+            part_bot.simplices = np.array(store.get(f'/part_bot/simplices').values.tolist())
+
+            if "/parameter" in store.keys():
+                model.parameter = store.get(f'/parameter').to_dict()
+            else:
+                model.parameter = {}
+            model.part_top = part_top
+            model.part_bot = part_bot
+        return model
+
+    def plot_3d(self, filepath=None, ax=None):
+        cs = self
+        if ax is None:
+            fig = plt.figure(1, figsize=(18, 10))
+            ax1 = fig.add_subplot(111, projection="3d")
+            ax1.set_xlabel("x")
+            ax1.set_ylabel("y")
+            ax1.set_zlabel("z")
+            ax1.set_title(f"Clamping Design{cs.designid:04d}")
+        else:
+            ax1 = ax
+
+        ax1.plot_trisurf(cs.part_top.nodes.x, cs.part_top.nodes.y, cs.part_top.nodes.z,
+                        triangles=cs.part_top.simplices, cmap=plt.cm.Spectral_r,
+                        alpha=.5, shade=False)
+        ax1.plot_trisurf(cs.part_bot.nodes.x, cs.part_bot.nodes.y, cs.part_bot.nodes.z,
+                        triangles=cs.part_bot.simplices, cmap=plt.cm.Spectral_r,
+                        alpha=.5, shade=False)
+
+        ax1.plot(cs.part_top.contour.x, cs.part_top.contour.y, cs.part_top.contour.z, color="k")
+        ax1.plot(cs.part_bot.contour.x, cs.part_bot.contour.y, cs.part_bot.contour.z, color="k")
+        if ax is None:
+            fig.tight_layout()
+        if filepath is not None:
+            fig.savefig(filepath)
+
+    def plot_3d_contour(self, filepath):
+        cs = self
+        fig = plt.figure(1, figsize=(18, 7))
+        fig.clf()
+        ax1 = fig.add_subplot(121)
+        ax2 = fig.add_subplot(122, projection="3d")
+        ax1.set_aspect("equal", "datalim")
+        cs.plot_3d(ax=ax2)
+        ax1.set_xlabel("x")
+        ax1.set_ylabel("y")
+        ax2.set_xlabel("x")
+        ax2.set_ylabel("y")
+        ax2.set_zlabel("z")
+        ax1.set_xlim(-220, 220)
+        ax1.set_ylim(-110, 110)
+        ax2.set_xlim(-220, 220)
+        ax2.set_ylim(-110, 110)
+        ax2.set_zlim(-50, 80)
+        ax1.plot(cs.part_top.contour.x, cs.part_top.contour.y, color="r", label=f"top")
+        ax1.plot(cs.part_bot.contour.x, cs.part_bot.contour.y, color="g", label=f"bot")
+        ax1.set_title(f"Clamping Design{cs.designid:04d}")
+        ax1.scatter(pt_fix.x, pt_fix.y)
+        ax1.scatter(pt_clamp.x, pt_clamp.y)
+        ax1.scatter(pt_joint.x, pt_joint.y)
+        for i, r in pt_fix.iterrows():
+            ax1.annotate(r.label,
+                        xy=(r.x, r.y),
+                        size=12,
+                        xycoords='data',
+                        xytext=(0, 4),
+                        textcoords='offset points',
+                        horizontalalignment='center',
+                        verticalalignment='bottom')
+        for i, r in pt_clamp.iterrows():
+            ax1.annotate(r.label,
+                        xy=(r.x, r.y),
+                        size=12,
+                        xycoords='data',
+                        xytext=(0, 4),
+                        textcoords='offset points',
+                        horizontalalignment='center',
+                        verticalalignment='bottom')
+        for i, r in pt_joint.iterrows():
+            ax1.annotate(r.label,
+                        xy=(r.x, r.y),
+                        size=12,
+                        xycoords='data',
+                        xytext=(0, 4),
+                        textcoords='offset points',
+                        horizontalalignment='center',
+                        verticalalignment='bottom')
+        fig.tight_layout()
+        if filepath is not None:
+            fig.savefig(filepath)
 class Model:
     def __init__(self, design, h5filepath, fit=False):
         self.parameter = {}

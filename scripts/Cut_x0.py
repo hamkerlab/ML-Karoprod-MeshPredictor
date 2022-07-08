@@ -41,7 +41,8 @@ config = {
     'max_epochs': 100,
     'layers': [256, 256, 256, 256, 256],
     'dropout': 0.0,
-    'learning_rate': 0.001
+    'learning_rate': 0.001,
+    'activation': 'lrelu'
 }
 
 

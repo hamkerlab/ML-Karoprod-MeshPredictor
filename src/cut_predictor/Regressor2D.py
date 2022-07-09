@@ -198,7 +198,7 @@ class ProjectionPredictor(Predictor):
         for idx, attr in enumerate(self.output_attributes):
             result.append(self._rescale_output(attr, y[:, idx]).reshape(shape))
 
-        dfr = pd.DataFrame(np.array(result).T, columns=["x", "y", "z"])
+        dfr = pd.DataFrame(np.array(result).T, columns=["x", "y", "z"], index=df.index)
         return df.join(dfr)
 
     def _compare(self, doe_id):

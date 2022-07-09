@@ -61,4 +61,5 @@ nav:
     - 'Cut_flange.ipynb'
     - 'Projection_2D.ipynb'
     - 'Reference_3D.ipynb'
-    - 'Springback_UV.ipynb'
+    - 'Springback_UV_xyz.ipynb'
+    - 'Joining.ipynb'

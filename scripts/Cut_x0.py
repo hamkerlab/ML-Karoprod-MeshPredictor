@@ -21,17 +21,17 @@ reg.load_data(
         'Ziehspalt', 
         'Einlegeposition', 
         'Ziehtiefe',
-        'Stempel_ID',
+        'Rp0',
     ],
     categorical = [
         'Ziehspalt', 
         'Ziehtiefe',
-        'Stempel_ID',
     ],
     position = 'tp',
     output = ['deviationc'],
     validation_split=0.1,
-    validation_method='leaveoneout'
+    validation_method='leaveoneout',
+    position_scaler='minmax'
 )
 
 reg.save_config("../models/cut_x0.pkl")
@@ -41,7 +41,8 @@ config = {
     'max_epochs': 100,
     'layers': [256, 256, 256, 256, 256],
     'dropout': 0.0,
-    'learning_rate': 0.001
+    'learning_rate': 0.001,
+    'activation': 'lrelu'
 }
 
 

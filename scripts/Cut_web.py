@@ -24,17 +24,17 @@ reg.load_data(
         'Ziehspalt', 
         'Einlegeposition', 
         'Ziehtiefe',
-        'Stempel_ID',
+        'Rp0',
     ],
     categorical = [
         'Ziehspalt', 
         'Ziehtiefe',
-        'Stempel_ID',
     ],
     position = 'c_phi',
     output = 'c_rho',
     validation_split=0.1,
-    validation_method='leaveoneout'
+    validation_method='leaveoneout',
+    position_scaler='minmax'
 )
 
 best_config = reg.autotune(

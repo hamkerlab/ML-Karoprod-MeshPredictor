@@ -106,9 +106,18 @@ class Predictor(object):
         # Normalize input and outputs
         if not self.angle_input:
             for attr in self.position_attributes:
-                self.df[attr] = self.df[attr].apply(
-                    lambda x: (x - self.mean_values[attr])/(self.std_values[attr])
-                ) 
+                if self.position_scaler == 'normal':
+                    self.df[attr] = self.df[attr].apply(
+                        lambda x: (x - self.mean_values[attr])/(self.std_values[attr])
+                    ) 
+                elif self.position_scaler == 'minmax':
+                    self.df[attr] = self.df[attr].apply(
+                        lambda x: (x - self.min_values[attr])/(self.max_values[attr] - self.min_values[attr])
+                    ) 
+                else:
+                    print("ERROR: position_scaler must be either 'normal' or 'minmax'.")
+                    raise Exception
+
                 self.features.append(attr)
         else:
             for attr in self.position_attributes:
@@ -203,7 +212,7 @@ class Predictor(object):
 
         Needed to make predictions from a trained model without having to reload the data.
 
-        :param filename: path to the pickle file where the information will be saved.
+        :param filename: path to the pickle file where the information will be saved (extension: .pkl).
         """
         config = {
             # Features
@@ -212,6 +221,7 @@ class Predictor(object):
             'output_attributes': self.output_attributes,
             'categorical_attributes': self.categorical_attributes,
             'angle_input': self.angle_input,
+            'position_scaler': self.position_scaler,
             'doe_id': self.doe_id,
             'features': self.features,
             'categorical_values': self.categorical_values,
@@ -227,8 +237,8 @@ class Predictor(object):
             'number_samples': self.number_samples,
         }
 
-        for key, val in config.items():
-            print(key, val, type(val))
+        #for key, val in config.items():
+        #    print(key, val, type(val))
 
         with open(filename, 'wb') as f:
             pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
@@ -249,6 +259,7 @@ class Predictor(object):
         self.output_attributes = config['output_attributes']
         self.categorical_attributes = config['categorical_attributes']
         self.angle_input = config['angle_input']
+        self.position_scaler  = config['position_scaler']
         self.doe_id = config['doe_id']
         self.features = config['features']
         self.categorical_values = config['categorical_values']
@@ -632,7 +643,7 @@ class Predictor(object):
         self._visualization_function(x, y)
         
 
-    def optimize(self, objective, positions, nb_trials):
+    def optimize(self, objective, positions, nb_trials, fixed={}):
         """
         Returns the process parameters that minimize the provided objective function.
 
@@ -648,24 +659,33 @@ class Predictor(object):
         :param objective: objective function to be minimized.
         :param positions: input positions for the prediction. Must be the same as for `predict()` depending on the class.
         :param nb_trials: number of optimization trials.
+        :param fixed: dictionary containing fixed values of the process parameters that should not be optimized.
         """
         self._optimize_function = objective
         self._optimize_positions = positions
+        self._optimize_fixed = fixed
 
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         self.study = optuna.create_study(direction='minimize')
         self.study.optimize(self._optimize, n_trials=nb_trials, show_progress_bar=True)
 
-        print("Best parameters:", self.study.best_params)
+        pp = self._optimize_fixed.copy()
+        pp.update(self.study.best_params)
+
+        print("Best parameters:", pp)
         print("Achieved objective:", self.study.best_value)
 
-        return self.study.best_params
+        return pp
 
     def _optimize(self, trial):
 
         process_parameters = {}
 
         for attr in self.process_parameters:
+
+            if attr in self._optimize_fixed.keys():
+                process_parameters[attr] = self._optimize_fixed[attr]
+                continue
 
             if attr in self.categorical_attributes:
 

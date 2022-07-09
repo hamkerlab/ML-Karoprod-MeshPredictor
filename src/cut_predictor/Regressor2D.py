@@ -63,17 +63,19 @@ class ProjectionPredictor(Predictor):
         self._make_arrays()
 
 
-    def predict(self, process_parameters, shape):
+    def predict(self, process_parameters, positions):
         """
-        Predicts the output variable for a given number of input positions (uniformly distributed between the min/max values of each input dimension used for training).
+        Predicts the output variable for a given number of input positions (either uniformly distributed between the min/max values of each input dimension used for training, or a (N, 2) array).
 
         ```python
-        reg.predict(process_parameters={...}, shape=(100, 100))
+        reg.predict(process_parameters={...}, positions=(100, 100))
+        # or:
+        reg.predict(process_parameters={...}, positions=np.array([[u, v] for u in np.linspace(0, 1, 100) for v in np.linspace(0, 1, 100)])
         ```
 
         :param process_parameters: dictionary containing the value of all process parameters.
-        :param shape: tuple of dimensions to be used for the prediction.
-        :return: (x, y) where x is a list of 2D positions and y the value of each output attribute.
+        :param positions: tuple of dimensions to be used for the prediction or (N, 2) numpy array of positions.
+        :return: (x, y) where x is a list of 2D positions and y the value of each output attribute as a numpy array.
         """
 
         if not self.has_config:
@@ -84,10 +86,28 @@ class ProjectionPredictor(Predictor):
             print("Error: no model has been trained yet.")
             return
 
-        nb_points = shape[0] * shape[1]
+        # Generate inputs
+        if isinstance(positions, tuple):
+            shape = positions
+            nb_points = shape[0] * shape[1]
 
+            x = np.linspace(self.min_values[self.position_attributes[0]], self.max_values[self.position_attributes[0]], shape[0])
+            y = np.linspace(self.min_values[self.position_attributes[1]], self.max_values[self.position_attributes[1]], shape[1])
+
+            samples = np.array([[i, j] for i in x for j in y])
+
+        elif isinstance(positions, np.ndarray):
+
+            nb_points, d = positions.shape
+            shape = (nb_points, 1)
+            if d != 2:
+                print("ERROR: the positions must have the shape (N, 2).")
+                return
+            samples = positions
+
+
+        # Input matrix
         X = np.empty((nb_points, 0))
-
         for idx, attr in enumerate(self.process_parameters):
 
             if attr in self.categorical_attributes:
@@ -104,30 +124,21 @@ class ProjectionPredictor(Predictor):
                 X = np.concatenate((X, val ), axis=1)
 
         # Position attributes are last
-        positions = []
-
-        x = np.linspace(self.min_values[self.position_attributes[0]], self.max_values[self.position_attributes[0]], shape[0])
-        y = np.linspace(self.min_values[self.position_attributes[1]], self.max_values[self.position_attributes[1]], shape[1])
-
-        positions = np.array([[i, j] for i in x for j in y])
-
         for i, attr in enumerate(self.position_attributes):
             if self.position_scaler == 'normal':
-                values = (positions[:, i] - self.mean_values[attr] ) / self.std_values[attr]
+                values = (samples[:, i] - self.mean_values[attr] ) / self.std_values[attr]
             else:
-                values = (positions[:, i] - self.min_values[attr] ) / (self.max_values[attr] - self.min_values[attr])
+                values = (samples[:, i] - self.min_values[attr] ) / (self.max_values[attr] - self.min_values[attr])
+            
             X = np.concatenate((X, values.reshape((nb_points, 1))), axis=1)
 
-
+        # Predict outputs and de-normalize
         y = self.model.predict(X, batch_size=self.batch_size).reshape((nb_points, len(self.output_attributes)))
-
         result = []
-
         for idx, attr in enumerate(self.output_attributes):
-
             result.append(self._rescale_output(attr, y[:, idx]).reshape(shape))
 
-        return positions, np.array(result)
+        return samples, np.array(result)
 
 
     def _compare(self, doe_id):

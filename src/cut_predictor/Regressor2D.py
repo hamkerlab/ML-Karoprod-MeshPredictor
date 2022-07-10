@@ -156,7 +156,7 @@ class ProjectionPredictor(Predictor):
             result.append(self._rescale_output(attr, y[:, idx]).reshape(shape))
 
         if export_df is True:
-            dfr = pd.DataFrame(np.array(result)[:,:,0].T, columns=["x", "y", "z"], index=df.index)
+            dfr = pd.DataFrame(np.array(result)[:,:,0].T, columns=self.output_attributes, index=df.index)
             return df.join(dfr)
 
         return samples, np.array(result)

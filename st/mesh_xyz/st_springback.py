@@ -74,9 +74,14 @@ st_u = st.sidebar.slider("u",
                          value=.5,
                          step=0.05,
                          )
-
+st_n = st.sidebar.slider("no of cut points",
+                         min_value=100,
+                         max_value=10000,
+                         value=10000,
+                         step=10,
+                         )
 # st.write(st_param)
-df = pd.DataFrame({"v": np.linspace(0., 1, 100), "u": st_u})
+df = pd.DataFrame({"v": np.linspace(0., 1, st_n), "u": st_u})
 dfr = regxyz.predict(st_param, df)
 dfeps = regeps.predict(st_param, dfr)
 
@@ -141,6 +146,7 @@ ax.plot(dfr.x, dfr.y, dfr.z, c="r", alpha=.7, lw=2)
 ax.set_xlabel("x")
 ax.set_ylabel("y")
 ax.set_zlabel("z")
+ax.set_zlim(-10, 80)
 with _lock:
     st.sidebar.write(figc3d)
 

@@ -124,109 +124,22 @@ class ProjectionPredictor(Predictor):
                 X = np.concatenate((X, val ), axis=1)
 
         # Position attributes are last
-        positions = []
-
-        x = np.linspace(self.min_values[self.position_attributes[0]], self.max_values[self.position_attributes[0]], shape[0])
-        y = np.linspace(self.min_values[self.position_attributes[1]], self.max_values[self.position_attributes[1]], shape[1])
-
-        positions = np.array([[i, j] for i in x for j in y])
-
         for i, attr in enumerate(self.position_attributes):
             if self.position_scaler == 'normal':
                 values = (samples[:, i] - self.mean_values[attr] ) / self.std_values[attr]
             else:
                 values = (samples[:, i] - self.min_values[attr] ) / (self.max_values[attr] - self.min_values[attr])
             
-            values = (positions[:, i] - self.mean_values[attr] ) / self.std_values[attr]
             X = np.concatenate((X, values.reshape((nb_points, 1))), axis=1)
 
         # Predict outputs and de-normalize
         y = self.model.predict(X, batch_size=self.batch_size).reshape((nb_points, len(self.output_attributes)))
-
         result = []
-
         for idx, attr in enumerate(self.output_attributes):
-
             result.append(self._rescale_output(attr, y[:, idx]).reshape(shape))
 
         return samples, np.array(result)
 
-    def predict_df(self, process_parameters, df):
-        """
-        Predicts the output variable for a given number of input positions (uniformly distributed between the min/max values of each input dimension used for training).
-
-        ```python
-        reg.predict(process_parameters={...}, shape=(100, 100))
-        ```
-
-        :param process_parameters: dictionary containing the value of all process parameters.
-        :param shape: tuple of dimensions to be used for the prediction.
-        :return: (x, y) where x is a list of 2D positions and y the value of each output attribute.
-        """
-
-        if not self.has_config:
-            print("Error: The data has not been loaded yet.")
-            return
-
-        if self.model is None:
-            print("Error: no model has been trained yet.")
-            return
-
-#        nb_points = shape[0] * shape[1]
-#         df = pd.DataFrame({"v": np.linspace(0.,1.,100), "u": 0.5})
-        shape = len(df)
-        nb_points = len(df)
-
-        X = np.empty((nb_points, 0))
-
-        for idx, attr in enumerate(self.process_parameters):
-
-            if attr in self.categorical_attributes:
-
-                code = one_hot([process_parameters[attr]], self.categorical_values[attr])
-                code = np.repeat(code, nb_points, axis=0)
-
-                X = np.concatenate((X, code), axis=1)
-
-            else:
-
-                val = ((process_parameters[attr] - self.mean_values[attr]) / self.std_values[attr]) * np.ones(
-                    (nb_points, 1))
-
-                X = np.concatenate((X, val), axis=1)
-
-        # Position attributes are last
-        positions = []
-
-        # Position attributes are last
-
-
-            # x = np.linspace(self.min_values[self.position_attributes[0]], self.max_values[self.position_attributes[0]],
-            #                 shape[0])
-            # y = np.linspace(self.min_values[self.position_attributes[1]], self.max_values[self.position_attributes[1]],
-            #                 shape[1])
-
-        # x = df.u.values
-        # y = df.v.values
-
-        # positions = np.array([[i, j] for i in x for j in y])
-
-        for i, attr in enumerate(self.position_attributes):
-            #values = df[attr].values
-            #   values = (positions[:, i] - self.mean_values[attr]) / self.std_values[attr]
-            values = (df[attr].values - self.mean_values[attr]) / self.std_values[attr]
-
-            X = np.concatenate((X, values.reshape((nb_points, 1))), axis=1)
-
-        y = self.model.predict(X, batch_size=self.batch_size).reshape((nb_points, len(self.output_attributes)))
-
-        result = []
-
-        for idx, attr in enumerate(self.output_attributes):
-            result.append(self._rescale_output(attr, y[:, idx]).reshape(shape))
-
-        dfr = pd.DataFrame(np.array(result).T, columns=["x", "y", "z"], index=df.index)
-        return df.join(dfr)
 
     def _compare(self, doe_id):
 

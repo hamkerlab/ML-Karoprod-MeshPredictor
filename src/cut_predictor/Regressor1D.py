@@ -143,11 +143,10 @@ class CutPredictor(Predictor):
             print("The experiment", doe_id, 'is not in the dataset.')
             return
 
-        indices = self.df_raw[self.df_raw[self.doe_id]==doe_id].index.to_numpy()
+        X = self.X[self.doe_id_list == doe_id, :]
+        t = self.target[self.doe_id_list == doe_id, :]
+        N, _ = t.shape
         
-        N = len(indices)
-        X = self.X[indices]
-        t = self.target[indices]
         for idx, attr in enumerate(self.output_attributes):
             t[:, idx] = self._rescale_output(attr, t[:, idx])
 

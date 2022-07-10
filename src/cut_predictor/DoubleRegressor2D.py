@@ -191,6 +191,8 @@ class DoubleProjectionPredictor(Predictor):
         self.df_raw = df[[self.doe_id_joining, self.part_index] + self.position_attributes + self.output_attributes]
         self.df = self.df_raw.merge(self.df_doe, how='left', on=self.doe_id_joining)
 
+        # Copy the doe_id and drop it
+        self.doe_id_list = self.df[self.doe_id_joining].to_numpy()
         self.df.drop(self.doe_id_joining, axis=1, inplace=True)
 
         # Position index (top/bottom as 1/0)
@@ -331,11 +333,10 @@ class DoubleProjectionPredictor(Predictor):
             print("The experiment", doe_id, 'is not in the dataset.')
             return
 
-        indices = self.df_raw[self.df_raw[self.doe_id_joining]==doe_id].index.to_numpy()
-        
-        N = len(indices)
-        X = self.X[indices, :]
-        t = self.target[indices, :]
+        X = self.X[self.doe_id_list == doe_id, :]
+        t = self.target[self.doe_id_list == doe_id, :]
+        N, _ = t.shape
+
         for idx, attr in enumerate(self.output_attributes):
             t[:, idx] = self._rescale_output(attr, t[:, idx])
 

@@ -101,6 +101,8 @@ class Predictor(object):
         self.df_raw = df[[self.doe_id] + self.position_attributes + self.output_attributes]
         self.df = self.df_raw.merge(self.df_doe, how='left', on=self.doe_id)
 
+        # Copy the doe_id and drop it
+        self.doe_id_list = self.df[self.doe_id].to_numpy()
         self.df.drop(self.doe_id, axis=1, inplace=True)
 
         # Normalize input and outputs

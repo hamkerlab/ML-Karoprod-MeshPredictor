@@ -7,8 +7,9 @@ import sys
 sys.path.insert(0, "../../src")
 from cut_predictor import ProjectionPredictor
 reg = ProjectionPredictor()
-reg.load_config('../../models/springback_uvmap_xyz.pkl')
-reg.load_network('../../models/best_uv_xyz_model/')
+model_path = '../../models/best_uv_xyz_model/'
+reg.load_config(os.path.join(model_path, 'config.pkl'))
+reg.load_network(model_path)
 
 
 x0_cut = pd.DataFrame({"u": .5, "v": np.linspace(0., 1. , 100)}).to_numpy()

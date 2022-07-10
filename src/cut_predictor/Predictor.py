@@ -11,7 +11,20 @@ import pickle
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import tensorflow as tf
+from tensorflow.python.keras.saving import hdf5_format
+import h5py
 import optuna
+import json
+
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
 
 def activation_layer(activation):
     if activation == 'lrelu':
@@ -205,6 +218,75 @@ class Predictor(object):
     def _rescale_output(self, attr, y):
 
         return self.min_values[attr] + (self.max_values[attr] - self.min_values[attr]) * y
+
+    def save_h5(self, model_path):
+        """save model and config in hdf5 file
+
+        """
+        from tensorflow.python.keras.saving import hdf5_format
+        import h5py
+
+        # Save model
+        with h5py.File(model_path, mode='w') as f:
+            hdf5_format.save_model_to_hdf5(self.model, f)
+
+            f.attrs['batch_size'] = self.batch_size
+
+            # Features
+            f.attrs['process_parameters'] = self.process_parameters
+            f.attrs['position_attributes'] = self.position_attributes,
+            f.attrs['output_attributes'] = self.output_attributes,
+            f.attrs['categorical_attributes'] = self.categorical_attributes
+            f.attrs['angle_input'] = self.angle_input,
+            f.attrs['position_scaler'] = self.position_scaler,
+            f.attrs['doe_id'] = self.doe_id,
+            f.attrs['features'] = self.features,
+            f.attrs['categorical_values'] = json.dumps(self.categorical_values, cls=NpEncoder) #self.categorical_values,
+
+            # Min/Max/Mean/Std values
+            f.attrs['min_values'] = json.dumps(self.min_values, cls=NpEncoder)#self.min_values,
+            f.attrs['max_values'] = json.dumps(self.max_values, cls=NpEncoder) #self.max_values,
+            f.attrs['mean_values'] = json.dumps(self.mean_values, cls=NpEncoder) #self.mean_values,
+            f.attrs['std_values'] = json.dumps(self.std_values, cls=NpEncoder) #self.std_values,
+
+            # Data shape
+            f.attrs['input_shape'] = self.input_shape,
+            f.attrs['number_samples'] = self.number_samples,
+
+    def load_h5(self, model_path):
+        """load model and config in hdf5 file
+
+        """
+
+
+        # Load model
+        with h5py.File(model_path, mode='r') as f:
+            self.model = hdf5_format.load_model_from_hdf5(f)
+
+            self.batch_size = f.attrs['batch_size']
+
+            # Features
+            self.process_parameters = f.attrs['process_parameters'].ravel().tolist()
+            self.position_attributes = f.attrs['position_attributes'].ravel().tolist()
+            self.output_attributes = f.attrs['output_attributes'].ravel().tolist()
+            self.categorical_attributes = f.attrs['categorical_attributes'].ravel().tolist()
+            self.angle_input = bool(f.attrs['angle_input'])
+            self.position_scaler  = f.attrs['position_scaler'].ravel().tolist()
+            self.doe_id = f.attrs['doe_id']
+            self.features = f.attrs['features'].ravel().tolist()
+            self.categorical_values = json.loads(f.attrs['categorical_values'])
+
+            # Min/Max/Mean/Std values
+            self.min_values = json.loads(f.attrs['min_values'])
+            self.max_values = json.loads(f.attrs['max_values'])
+            self.mean_values = json.loads(f.attrs['mean_values'])
+            self.std_values = json.loads(f.attrs['std_values'])
+
+            # Data shape
+            self.input_shape = f.attrs['input_shape']
+            self.number_samples = f.attrs['number_samples']
+
+            self.has_config = True
 
     def save_config(self, filename):
         """

@@ -12,7 +12,13 @@ class ProjectionPredictor(Predictor):
 
     Derives from Predictor, where more useful methods are defined.
     """
-        
+
+    @classmethod
+    def from_h5(cls, model_path):
+        reg = cls()
+        reg.load_h5(model_path=model_path)
+        return reg
+
     def load_data(self, doe, data, process_parameters, position, output, categorical=[], index='doe_id', validation_split=0.1, validation_method="random", position_scaler='normal'):
         """
         Loads pandas Dataframes containing the data and preprocesses it.

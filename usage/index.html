@@ -541,8 +541,22 @@
   
   
     <li class="md-nav__item">
-      <a href="../Springback_UV/" class="md-nav__link">
-        Springback UV
+      <a href="../Springback_UV_xyz/" class="md-nav__link">
+        Springback UV xyz
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Joining/" class="md-nav__link">
+        Joining
       </a>
     </li>
   
@@ -789,6 +803,12 @@
 </code></pre></div>
 <p>and finally load the weights of the trained model:</p>
 <div class="highlight"><pre><span></span><code><span class="n">reg</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">load_path</span><span class="o">=</span><span class="s1">&#39;best_model&#39;</span><span class="p">)</span>
+</code></pre></div>
+<p>Alternatively, you can save both the configuration and the trained network in a single HDF5 file:</p>
+<div class="highlight"><pre><span></span><code><span class="n">reg</span><span class="o">.</span><span class="n">save_h5</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;best_model.h5&#39;</span><span class="p">)</span>
+</code></pre></div>
+<p>and create a regressor for inference using the class method <code>from_h5</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">reg</span> <span class="o">=</span> <span class="n">CutPredictor</span><span class="o">.</span><span class="n">from_h5</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;best_model.h5&#39;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="optimization-of-the-process-parameters">Optimization of the process parameters<a class="headerlink" href="#optimization-of-the-process-parameters" title="Permanent link">#</a></h2>
 <p>Once a model is trained or loaded, it can be used to predict which value of the process parameters minimize a user-defined criterion.</p>

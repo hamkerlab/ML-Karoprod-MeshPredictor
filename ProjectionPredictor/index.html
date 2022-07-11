@@ -370,6 +370,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#cut_predictor.Regressor2D.ProjectionPredictor.compare_xyz" class="md-nav__link">
+    compare_xyz()
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -508,8 +515,22 @@
   
   
     <li class="md-nav__item">
-      <a href="../Springback_UV/" class="md-nav__link">
-        Springback UV
+      <a href="../Springback_UV_xyz/" class="md-nav__link">
+        Springback UV xyz
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Joining/" class="md-nav__link">
+        Joining
       </a>
     </li>
   
@@ -566,6 +587,13 @@
           <li class="md-nav__item">
   <a href="#cut_predictor.Regressor2D.ProjectionPredictor.predict" class="md-nav__link">
     predict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cut_predictor.Regressor2D.ProjectionPredictor.compare_xyz" class="md-nav__link">
+    compare_xyz()
   </a>
   
 </li>
@@ -775,26 +803,92 @@
 <span class="normal">162</span>
 <span class="normal">163</span>
 <span class="normal">164</span>
-<span class="normal">165</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">ProjectionPredictor</span><span class="p">(</span><span class="n">Predictor</span><span class="p">):</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">ProjectionPredictor</span><span class="p">(</span><span class="n">Predictor</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Regression method to predict 2D projections from process parameters.</span>
 
 <span class="sd">    Derives from Predictor, where more useful methods are defined.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="n">position_scaler</span><span class="o">=</span><span class="s1">&#39;normal&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Loads pandas Dataframes containing the data and preprocesses it.</span>
 
 <span class="sd">        :param doe: pandas.Dataframe object containing the process parameters (design of experiments table).</span>
 <span class="sd">        :param data: pandas.Dataframe object containing the experiments.</span>
-<span class="sd">        :param process_parameters: list of process parameters to be used. The names must match the columns of the csv file.</span>
-<span class="sd">        :param categorical: list of process parameters that should be considered as categorical nad one-hot encoded.</span>
-<span class="sd">        :param position: position variables as a list. The name must match one column of the csv file.</span>
-<span class="sd">        :param output: output variable(s) to be predicted. The name must match one column of the csv file.</span>
+<span class="sd">        :param process_parameters: list of process parameters to be used. The names must match the columns of the data file.</span>
+<span class="sd">        :param categorical: list of process parameters that should be considered as categorical and one-hot encoded.</span>
+<span class="sd">        :param position: position variables as a list. The names must match the columns of the csv file.</span>
+<span class="sd">        :param output: output variable(s) to be predicted. The names must match the columns of the data file.</span>
 <span class="sd">        :param index: name of the column in doe and data representing the design ID (default: &#39;doe_id&#39;)</span>
 <span class="sd">        :param validation_split: percentage of the data used for validation (default: 0.1)</span>
 <span class="sd">        :param validation_method: method to split the data for validation, either &#39;random&#39; or &#39;leaveoneout&#39; (default: &#39;random&#39;)</span>
+<span class="sd">        :param position_scaler: normalization applied to the position attributes (&#39;minmax&#39; or &#39;normal&#39;, default &#39;normal&#39;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">has_config</span> <span class="o">=</span> <span class="kc">True</span>
@@ -815,6 +909,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">categorical_attributes</span> <span class="o">=</span> <span class="n">categorical</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">angle_input</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_scaler</span> <span class="o">=</span> <span class="n">position_scaler</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">doe_id</span> <span class="o">=</span> <span class="n">index</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">validation_split</span> <span class="o">=</span> <span class="n">validation_split</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">validation_method</span> <span class="o">=</span> <span class="n">validation_method</span>
@@ -829,17 +925,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_make_arrays</span><span class="p">()</span>
 
 
-    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">positions</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Predicts the output variable for a given number of input positions (uniformly distributed between the min/max values of each input dimension used for training).</span>
+<span class="sd">        Predicts the output variable for a given number of input positions (either uniformly distributed between the min/max values of each input dimension used for training, or a (N, 2) array).</span>
 
 <span class="sd">        ```python</span>
-<span class="sd">        reg.predict(process_parameters={...}, shape=(100, 100))</span>
+<span class="sd">        reg.predict(process_parameters={...}, positions=(100, 100))</span>
+<span class="sd">        # or:</span>
+<span class="sd">        reg.predict(process_parameters={...}, positions=np.array([[u, v] for u in np.linspace(0, 1, 100) for v in np.linspace(0, 1, 100)])</span>
 <span class="sd">        ```</span>
 
 <span class="sd">        :param process_parameters: dictionary containing the value of all process parameters.</span>
-<span class="sd">        :param shape: tuple of dimensions to be used for the prediction.</span>
-<span class="sd">        :return: (x, y) where x is a list of 2D positions and y the value of each output attribute.</span>
+<span class="sd">        :param positions: tuple of dimensions to be used for the prediction or (N, 2) numpy array of positions.</span>
+<span class="sd">        :return: (x, y) where x is a list of 2D positions and y the value of each output attribute as a numpy array.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_config</span><span class="p">:</span>
@@ -850,10 +948,28 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: no model has been trained yet.&quot;</span><span class="p">)</span>
             <span class="k">return</span>
 
-        <span class="n">nb_points</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># Generate inputs</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">positions</span>
+            <span class="n">nb_points</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">y</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+
+            <span class="n">nb_points</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">positions</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">nb_points</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: the positions must have the shape (N, 2).&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="n">positions</span>
+
+
+        <span class="c1"># Input matrix</span>
         <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nb_points</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">process_parameters</span><span class="p">):</span>
 
             <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">categorical_attributes</span><span class="p">:</span>
@@ -870,28 +986,21 @@
                 <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">val</span> <span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># Position attributes are last</span>
-        <span class="n">positions</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-
-        <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">y</span><span class="p">])</span>
-
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_scaler</span> <span class="o">==</span> <span class="s1">&#39;normal&#39;</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="n">attr</span><span class="p">])</span>
 
-            <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">positions</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
             <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nb_points</span><span class="p">,</span> <span class="mi">1</span><span class="p">))),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-
+        <span class="c1"># Predict outputs and de-normalize</span>
         <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nb_points</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_attributes</span><span class="p">)))</span>
-
         <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
-
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_attributes</span><span class="p">):</span>
-
             <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rescale_output</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">y</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="n">positions</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">samples</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
 
     <span class="k">def</span> <span class="nf">_compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe_id</span><span class="p">):</span>
@@ -904,10 +1013,9 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The experiment&quot;</span><span class="p">,</span> <span class="n">doe_id</span><span class="p">,</span> <span class="s1">&#39;is not in the dataset.&#39;</span><span class="p">)</span>
             <span class="k">return</span>
 
-        <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_raw</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df_raw</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">doe_id</span><span class="p">]</span><span class="o">==</span><span class="n">doe_id</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="n">indices</span><span class="p">,</span> <span class="p">:]</span>
-        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="n">indices</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">doe_id_list</span> <span class="o">==</span> <span class="n">doe_id</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">doe_id_list</span> <span class="o">==</span> <span class="n">doe_id</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">N</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_attributes</span><span class="p">):</span>
             <span class="n">t</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_output</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">t</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
 
@@ -932,6 +1040,56 @@
             <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Prediction - &quot;</span> <span class="o">+</span> <span class="n">attr</span><span class="p">)</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+
+
+    <span class="k">def</span> <span class="nf">compare_xyz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a 3D point cloud compring the ground truth and the prediction on a provided experiment. </span>
+
+<span class="sd">        Works only when the output variables are [x, y, z] coordinates.</span>
+
+<span class="sd">        :param doe_id: id of the experiment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: no model has been trained yet.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">doe_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">doe_ids</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The experiment&quot;</span><span class="p">,</span> <span class="n">doe_id</span><span class="p">,</span> <span class="s1">&#39;is not in the dataset.&#39;</span><span class="p">)</span>
+            <span class="k">return</span>        
+
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">doe_id_list</span> <span class="o">==</span> <span class="n">doe_id</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">doe_id_list</span> <span class="o">==</span> <span class="n">doe_id</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">N</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_attributes</span><span class="p">):</span>
+            <span class="n">t</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_output</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">t</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_attributes</span><span class="p">):</span>
+            <span class="n">y</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_output</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">y</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
+
+
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Ground truth&quot;</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+            <span class="n">t</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>  
+            <span class="n">t</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="n">t</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span>
+            <span class="n">s</span><span class="o">=</span><span class="mf">0.005</span>
+        <span class="p">)</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Prediction&quot;</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+            <span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>  
+            <span class="n">y</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="n">y</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span>
+            <span class="n">s</span><span class="o">=</span><span class="mf">0.005</span>
+        <span class="p">)</span>
 </code></pre></div>
 </td></tr></table>
           </details>
@@ -952,7 +1110,7 @@
 
 
 <h3 id="cut_predictor.Regressor2D.ProjectionPredictor.load_data" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">load_data</span><span class="p">(</span><span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">load_data</span><span class="p">(</span><span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">position_scaler</span><span class="o">=</span><span class="s1">&#39;normal&#39;</span><span class="p">)</span></code>
 
 
 <a href="#cut_predictor.Regressor2D.ProjectionPredictor.load_data" class="headerlink" title="Permanent link">#</a></h3>
@@ -995,7 +1153,7 @@
           <td><code>process_parameters</code></td>
           <td>
           </td>
-          <td><p>list of process parameters to be used. The names must match the columns of the csv file.</p></td>
+          <td><p>list of process parameters to be used. The names must match the columns of the data file.</p></td>
           <td>
               <em>required</em>
           </td>
@@ -1004,7 +1162,7 @@
           <td><code>categorical</code></td>
           <td>
           </td>
-          <td><p>list of process parameters that should be considered as categorical nad one-hot encoded.</p></td>
+          <td><p>list of process parameters that should be considered as categorical and one-hot encoded.</p></td>
           <td>
                 <code>[]</code>
           </td>
@@ -1013,7 +1171,7 @@
           <td><code>position</code></td>
           <td>
           </td>
-          <td><p>position variables as a list. The name must match one column of the csv file.</p></td>
+          <td><p>position variables as a list. The names must match the columns of the csv file.</p></td>
           <td>
               <em>required</em>
           </td>
@@ -1022,7 +1180,7 @@
           <td><code>output</code></td>
           <td>
           </td>
-          <td><p>output variable(s) to be predicted. The name must match one column of the csv file.</p></td>
+          <td><p>output variable(s) to be predicted. The names must match the columns of the data file.</p></td>
           <td>
               <em>required</em>
           </td>
@@ -1052,6 +1210,15 @@
           <td><p>method to split the data for validation, either 'random' or 'leaveoneout' (default: 'random')</p></td>
           <td>
                 <code>&#39;random&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>position_scaler</code></td>
+          <td>
+          </td>
+          <td><p>normalization applied to the position attributes ('minmax' or 'normal', default 'normal')</p></td>
+          <td>
+                <code>&#39;normal&#39;</code>
           </td>
         </tr>
     </tbody>
@@ -1103,19 +1270,23 @@
 <span class="normal">57</span>
 <span class="normal">58</span>
 <span class="normal">59</span>
-<span class="normal">60</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">):</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="n">position_scaler</span><span class="o">=</span><span class="s1">&#39;normal&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Loads pandas Dataframes containing the data and preprocesses it.</span>
 
 <span class="sd">    :param doe: pandas.Dataframe object containing the process parameters (design of experiments table).</span>
 <span class="sd">    :param data: pandas.Dataframe object containing the experiments.</span>
-<span class="sd">    :param process_parameters: list of process parameters to be used. The names must match the columns of the csv file.</span>
-<span class="sd">    :param categorical: list of process parameters that should be considered as categorical nad one-hot encoded.</span>
-<span class="sd">    :param position: position variables as a list. The name must match one column of the csv file.</span>
-<span class="sd">    :param output: output variable(s) to be predicted. The name must match one column of the csv file.</span>
+<span class="sd">    :param process_parameters: list of process parameters to be used. The names must match the columns of the data file.</span>
+<span class="sd">    :param categorical: list of process parameters that should be considered as categorical and one-hot encoded.</span>
+<span class="sd">    :param position: position variables as a list. The names must match the columns of the csv file.</span>
+<span class="sd">    :param output: output variable(s) to be predicted. The names must match the columns of the data file.</span>
 <span class="sd">    :param index: name of the column in doe and data representing the design ID (default: &#39;doe_id&#39;)</span>
 <span class="sd">    :param validation_split: percentage of the data used for validation (default: 0.1)</span>
 <span class="sd">    :param validation_method: method to split the data for validation, either &#39;random&#39; or &#39;leaveoneout&#39; (default: &#39;random&#39;)</span>
+<span class="sd">    :param position_scaler: normalization applied to the position attributes (&#39;minmax&#39; or &#39;normal&#39;, default &#39;normal&#39;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">has_config</span> <span class="o">=</span> <span class="kc">True</span>
@@ -1136,6 +1307,8 @@
 
     <span class="bp">self</span><span class="o">.</span><span class="n">categorical_attributes</span> <span class="o">=</span> <span class="n">categorical</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">angle_input</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">position_scaler</span> <span class="o">=</span> <span class="n">position_scaler</span>
+
     <span class="bp">self</span><span class="o">.</span><span class="n">doe_id</span> <span class="o">=</span> <span class="n">index</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">validation_split</span> <span class="o">=</span> <span class="n">validation_split</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">validation_method</span> <span class="o">=</span> <span class="n">validation_method</span>
@@ -1162,7 +1335,7 @@
 
 
 <h3 id="cut_predictor.Regressor2D.ProjectionPredictor.predict" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">predict</span><span class="p">(</span><span class="n">process_parameters</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">predict</span><span class="p">(</span><span class="n">process_parameters</span><span class="p">,</span> <span class="n">positions</span><span class="p">)</span></code>
 
 
 <a href="#cut_predictor.Regressor2D.ProjectionPredictor.predict" class="headerlink" title="Permanent link">#</a></h3>
@@ -1170,8 +1343,10 @@
 
     <div class="doc doc-contents ">
 
-      <p>Predicts the output variable for a given number of input positions (uniformly distributed between the min/max values of each input dimension used for training).</p>
-<div class="highlight"><pre><span></span><code><span class="n">reg</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">process_parameters</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+      <p>Predicts the output variable for a given number of input positions (either uniformly distributed between the min/max values of each input dimension used for training, or a (N, 2) array).</p>
+<div class="highlight"><pre><span></span><code><span class="n">reg</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">process_parameters</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span> <span class="n">positions</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+<span class="c1"># or:</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">process_parameters</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span> <span class="n">positions</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)])</span>
 </code></pre></div>
 
   <p><strong>Parameters:</strong></p>
@@ -1195,10 +1370,10 @@
           </td>
         </tr>
         <tr>
-          <td><code>shape</code></td>
+          <td><code>positions</code></td>
           <td>
           </td>
-          <td><p>tuple of dimensions to be used for the prediction.</p></td>
+          <td><p>tuple of dimensions to be used for the prediction or (N, 2) numpy array of positions.</p></td>
           <td>
               <em>required</em>
           </td>
@@ -1218,17 +1393,14 @@
         <tr>
           <td>
           </td>
-          <td><p>(x, y) where x is a list of 2D positions and y the value of each output attribute.</p></td>
+          <td><p>(x, y) where x is a list of 2D positions and y the value of each output attribute as a numpy array.</p></td>
         </tr>
     </tbody>
   </table>
 
         <details class="quote">
           <summary>Source code in <code>cut_predictor/Regressor2D.py</code></summary>
-          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 63</span>
-<span class="normal"> 64</span>
-<span class="normal"> 65</span>
-<span class="normal"> 66</span>
+          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 66</span>
 <span class="normal"> 67</span>
 <span class="normal"> 68</span>
 <span class="normal"> 69</span>
@@ -1287,17 +1459,35 @@
 <span class="normal">122</span>
 <span class="normal">123</span>
 <span class="normal">124</span>
-<span class="normal">125</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">positions</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Predicts the output variable for a given number of input positions (uniformly distributed between the min/max values of each input dimension used for training).</span>
+<span class="sd">    Predicts the output variable for a given number of input positions (either uniformly distributed between the min/max values of each input dimension used for training, or a (N, 2) array).</span>
 
 <span class="sd">    ```python</span>
-<span class="sd">    reg.predict(process_parameters={...}, shape=(100, 100))</span>
+<span class="sd">    reg.predict(process_parameters={...}, positions=(100, 100))</span>
+<span class="sd">    # or:</span>
+<span class="sd">    reg.predict(process_parameters={...}, positions=np.array([[u, v] for u in np.linspace(0, 1, 100) for v in np.linspace(0, 1, 100)])</span>
 <span class="sd">    ```</span>
 
 <span class="sd">    :param process_parameters: dictionary containing the value of all process parameters.</span>
-<span class="sd">    :param shape: tuple of dimensions to be used for the prediction.</span>
-<span class="sd">    :return: (x, y) where x is a list of 2D positions and y the value of each output attribute.</span>
+<span class="sd">    :param positions: tuple of dimensions to be used for the prediction or (N, 2) numpy array of positions.</span>
+<span class="sd">    :return: (x, y) where x is a list of 2D positions and y the value of each output attribute as a numpy array.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_config</span><span class="p">:</span>
@@ -1308,10 +1498,28 @@
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: no model has been trained yet.&quot;</span><span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="n">nb_points</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># Generate inputs</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">positions</span>
+        <span class="n">nb_points</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">y</span><span class="p">])</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+
+        <span class="n">nb_points</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">positions</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">nb_points</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: the positions must have the shape (N, 2).&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">positions</span>
+
+
+    <span class="c1"># Input matrix</span>
     <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nb_points</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-
     <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">process_parameters</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">categorical_attributes</span><span class="p">:</span>
@@ -1328,28 +1536,21 @@
             <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">val</span> <span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="c1"># Position attributes are last</span>
-    <span class="n">positions</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-
-    <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">y</span><span class="p">])</span>
-
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_scaler</span> <span class="o">==</span> <span class="s1">&#39;normal&#39;</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="n">attr</span><span class="p">])</span>
 
-        <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">positions</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
         <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nb_points</span><span class="p">,</span> <span class="mi">1</span><span class="p">))),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-
+    <span class="c1"># Predict outputs and de-normalize</span>
     <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nb_points</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_attributes</span><span class="p">)))</span>
-
     <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
-
     <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_attributes</span><span class="p">):</span>
-
         <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rescale_output</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">y</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
 
-    <span class="k">return</span> <span class="n">positions</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">samples</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 </code></pre></div>
 </td></tr></table>
         </details>
@@ -1357,6 +1558,149 @@
 
   </div>
 
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h3 id="cut_predictor.Regressor2D.ProjectionPredictor.compare_xyz" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">compare_xyz</span><span class="p">(</span><span class="n">doe_id</span><span class="p">)</span></code>
+
+
+<a href="#cut_predictor.Regressor2D.ProjectionPredictor.compare_xyz" class="headerlink" title="Permanent link">#</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Creates a 3D point cloud compring the ground truth and the prediction on a provided experiment. </p>
+<p>Works only when the output variables are [x, y, z] coordinates.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>doe_id</code></td>
+          <td>
+          </td>
+          <td><p>id of the experiment.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+        <details class="quote">
+          <summary>Source code in <code>cut_predictor/Regressor2D.py</code></summary>
+          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">compare_xyz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a 3D point cloud compring the ground truth and the prediction on a provided experiment. </span>
+
+<span class="sd">    Works only when the output variables are [x, y, z] coordinates.</span>
+
+<span class="sd">    :param doe_id: id of the experiment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: no model has been trained yet.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">doe_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">doe_ids</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The experiment&quot;</span><span class="p">,</span> <span class="n">doe_id</span><span class="p">,</span> <span class="s1">&#39;is not in the dataset.&#39;</span><span class="p">)</span>
+        <span class="k">return</span>        
+
+    <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">doe_id_list</span> <span class="o">==</span> <span class="n">doe_id</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">doe_id_list</span> <span class="o">==</span> <span class="n">doe_id</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">N</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_attributes</span><span class="p">):</span>
+        <span class="n">t</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_output</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">t</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
+
+    <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_attributes</span><span class="p">):</span>
+        <span class="n">y</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_output</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">y</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
+
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Ground truth&quot;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+        <span class="n">t</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>  
+        <span class="n">t</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">t</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span>
+        <span class="n">s</span><span class="o">=</span><span class="mf">0.005</span>
+    <span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Prediction&quot;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+        <span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>  
+        <span class="n">y</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">y</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span>
+        <span class="n">s</span><span class="o">=</span><span class="mf">0.005</span>
+    <span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+        </details>
+    </div>
+
+  </div>
 
 
 

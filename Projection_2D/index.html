@@ -488,8 +488,22 @@
   
   
     <li class="md-nav__item">
-      <a href="../Springback_UV/" class="md-nav__link">
-        Springback UV
+      <a href="../Springback_UV_xyz/" class="md-nav__link">
+        Springback UV xyz
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Joining/" class="md-nav__link">
+        Joining
       </a>
     </li>
   
@@ -1125,18 +1139,18 @@
         <span class="s1">&#39;Ziehspalt&#39;</span><span class="p">,</span> 
         <span class="s1">&#39;Einlegeposition&#39;</span><span class="p">,</span> 
         <span class="s1">&#39;Ziehtiefe&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;Stempel_ID&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Rp0&#39;</span><span class="p">,</span>
     <span class="p">],</span>
     <span class="n">categorical</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s1">&#39;Ziehspalt&#39;</span><span class="p">,</span> 
         <span class="s1">&#39;Ziehtiefe&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;Stempel_ID&#39;</span><span class="p">,</span>
     <span class="p">],</span>
     <span class="n">position</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;xp&#39;</span><span class="p">,</span> <span class="s1">&#39;yp&#39;</span><span class="p">],</span>
     <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;deviation&#39;</span><span class="p">,</span> <span class="s1">&#39;thickness&#39;</span><span class="p">],</span>
     <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
     <span class="n">validation_method</span><span class="o">=</span><span class="s1">&#39;leaveoneout&#39;</span>
 <span class="p">)</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">save_config</span><span class="p">(</span><span class="s2">&quot;../models/projection.pkl&quot;</span><span class="p">)</span>
 </code></pre></div>
 
 </div>

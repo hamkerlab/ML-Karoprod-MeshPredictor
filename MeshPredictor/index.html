@@ -508,8 +508,22 @@
   
   
     <li class="md-nav__item">
-      <a href="../Springback_UV/" class="md-nav__link">
-        Springback UV
+      <a href="../Springback_UV_xyz/" class="md-nav__link">
+        Springback UV xyz
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Joining/" class="md-nav__link">
+        Joining
       </a>
     </li>
   
@@ -777,14 +791,19 @@
 <span class="normal">164</span>
 <span class="normal">165</span>
 <span class="normal">166</span>
-<span class="normal">167</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">MeshPredictor</span><span class="p">(</span><span class="n">Predictor</span><span class="p">):</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">MeshPredictor</span><span class="p">(</span><span class="n">Predictor</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Regression method to predict 3D projections from process parameters.</span>
 
 <span class="sd">    Derives from Predictor, where more useful methods are defined.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="n">position_scaler</span><span class="o">=</span><span class="s1">&#39;normal&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Loads pandas Dataframes containing the data and preprocesses it.</span>
 
@@ -797,6 +816,7 @@
 <span class="sd">        :param index: name of the column in doe and data representing the design ID (default: &#39;doe_id&#39;)</span>
 <span class="sd">        :param validation_split: percentage of the data used for validation (default: 0.1)</span>
 <span class="sd">        :param validation_method: method to split the data for validation, either &#39;random&#39; or &#39;leaveoneout&#39; (default: &#39;random&#39;)</span>
+<span class="sd">        :param position_scaler: normalization applied to the position attributes (&#39;minmax&#39; or &#39;normal&#39;, default &#39;normal&#39;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">has_config</span> <span class="o">=</span> <span class="kc">True</span>
@@ -817,6 +837,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">categorical_attributes</span> <span class="o">=</span> <span class="n">categorical</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">angle_input</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_scaler</span> <span class="o">=</span> <span class="n">position_scaler</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">doe_id</span> <span class="o">=</span> <span class="n">index</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">validation_split</span> <span class="o">=</span> <span class="n">validation_split</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">validation_method</span> <span class="o">=</span> <span class="n">validation_method</span>
@@ -874,7 +896,11 @@
         <span class="c1"># Position attributes are last</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">):</span>
 
-            <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">positions</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_scaler</span> <span class="o">==</span> <span class="s1">&#39;normal&#39;</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">positions</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">positions</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="n">attr</span><span class="p">])</span>
+
             <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nb_points</span><span class="p">,</span> <span class="mi">1</span><span class="p">))),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 
@@ -903,12 +929,10 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The experiment&quot;</span><span class="p">,</span> <span class="n">doe_id</span><span class="p">,</span> <span class="s1">&#39;is not in the dataset.&#39;</span><span class="p">)</span>
             <span class="k">return</span>
 
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">doe_id_list</span> <span class="o">==</span> <span class="n">doe_id</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">doe_id_list</span> <span class="o">==</span> <span class="n">doe_id</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">N</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span>
 
-        <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_raw</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df_raw</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">doe_id</span><span class="p">]</span><span class="o">==</span><span class="n">doe_id</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-
-        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="n">indices</span><span class="p">,</span> <span class="p">:]</span>
-        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="n">indices</span><span class="p">,</span> <span class="p">:]</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_attributes</span><span class="p">):</span>
             <span class="n">t</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_output</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">t</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
 
@@ -956,7 +980,7 @@
 
 
 <h3 id="cut_predictor.Regressor3D.MeshPredictor.load_data" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">load_data</span><span class="p">(</span><span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">load_data</span><span class="p">(</span><span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">position_scaler</span><span class="o">=</span><span class="s1">&#39;normal&#39;</span><span class="p">)</span></code>
 
 
 <a href="#cut_predictor.Regressor3D.MeshPredictor.load_data" class="headerlink" title="Permanent link">#</a></h3>
@@ -1058,6 +1082,15 @@
                 <code>&#39;random&#39;</code>
           </td>
         </tr>
+        <tr>
+          <td><code>position_scaler</code></td>
+          <td>
+          </td>
+          <td><p>normalization applied to the position attributes ('minmax' or 'normal', default 'normal')</p></td>
+          <td>
+                <code>&#39;normal&#39;</code>
+          </td>
+        </tr>
     </tbody>
   </table>
 
@@ -1107,7 +1140,10 @@
 <span class="normal">57</span>
 <span class="normal">58</span>
 <span class="normal">59</span>
-<span class="normal">60</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">):</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doe</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">categorical</span><span class="o">=</span><span class="p">[],</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;doe_id&#39;</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">validation_method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="n">position_scaler</span><span class="o">=</span><span class="s1">&#39;normal&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Loads pandas Dataframes containing the data and preprocesses it.</span>
 
@@ -1120,6 +1156,7 @@
 <span class="sd">    :param index: name of the column in doe and data representing the design ID (default: &#39;doe_id&#39;)</span>
 <span class="sd">    :param validation_split: percentage of the data used for validation (default: 0.1)</span>
 <span class="sd">    :param validation_method: method to split the data for validation, either &#39;random&#39; or &#39;leaveoneout&#39; (default: &#39;random&#39;)</span>
+<span class="sd">    :param position_scaler: normalization applied to the position attributes (&#39;minmax&#39; or &#39;normal&#39;, default &#39;normal&#39;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">has_config</span> <span class="o">=</span> <span class="kc">True</span>
@@ -1140,6 +1177,8 @@
 
     <span class="bp">self</span><span class="o">.</span><span class="n">categorical_attributes</span> <span class="o">=</span> <span class="n">categorical</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">angle_input</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">position_scaler</span> <span class="o">=</span> <span class="n">position_scaler</span>
+
     <span class="bp">self</span><span class="o">.</span><span class="n">doe_id</span> <span class="o">=</span> <span class="n">index</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">validation_split</span> <span class="o">=</span> <span class="n">validation_split</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">validation_method</span> <span class="o">=</span> <span class="n">validation_method</span>
@@ -1229,10 +1268,7 @@
 
         <details class="quote">
           <summary>Source code in <code>cut_predictor/Regressor3D.py</code></summary>
-          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 63</span>
-<span class="normal"> 64</span>
-<span class="normal"> 65</span>
-<span class="normal"> 66</span>
+          <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 66</span>
 <span class="normal"> 67</span>
 <span class="normal"> 68</span>
 <span class="normal"> 69</span>
@@ -1288,7 +1324,14 @@
 <span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
-<span class="normal">122</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">positions</span><span class="p">):</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process_parameters</span><span class="p">,</span> <span class="n">positions</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Predicts the output variables for each node specified in coordinates.</span>
 
@@ -1331,7 +1374,11 @@
     <span class="c1"># Position attributes are last</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position_attributes</span><span class="p">):</span>
 
-        <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">positions</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_scaler</span> <span class="o">==</span> <span class="s1">&#39;normal&#39;</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">positions</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">positions</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="n">attr</span><span class="p">])</span>
+
         <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nb_points</span><span class="p">,</span> <span class="mi">1</span><span class="p">))),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 

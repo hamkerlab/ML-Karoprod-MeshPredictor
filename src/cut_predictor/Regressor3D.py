@@ -63,7 +63,7 @@ class MeshPredictor(Predictor):
         self._make_arrays()
 
 
-    def predict(self, process_parameters, positions):
+    def predict(self, process_parameters, positions, as_df=False):
         """
         Predicts the output variables for each node specified in coordinates.
 
@@ -72,8 +72,8 @@ class MeshPredictor(Predictor):
         ```
 
         :param process_parameters: dictionary containing the value of all process parameters.
-        :param positions: dataframe containing the xyz coordinates of each node that should be predicted. The column names must match .
-        :return: value of the output attributes for each node.
+        :param positions: (N, 3) numpy array containing the xyz coordinates of each node that should be predicted. The column names must match .
+        :param as_df: whether the prediction should be returned as numpy arrays (False, default) or pandas dataframe (True).
         """
 
         if not self.has_config:
@@ -84,7 +84,7 @@ class MeshPredictor(Predictor):
             print("Error: no model has been trained yet.")
             return
 
-        nb_points = len(positions)
+        nb_points, _ = positions.shape
 
         X = np.empty((nb_points, 0))
 
@@ -126,7 +126,17 @@ class MeshPredictor(Predictor):
                  ), axis=1
             )
 
-        return positions, result
+        # Return inputs and outputs
+        if as_df:
+            d = pd.DataFrame()
+            for i, attr in enumerate(self.position_attributes):
+                d[attr] = positions[:, i]
+            for i, attr in enumerate(self.output_attributes):
+                d[attr] = result[:, i]
+            return d
+
+        else:
+            return positions, result
 
 
     def _compare(self, doe_id):

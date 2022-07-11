@@ -67,13 +67,13 @@ class CutPredictor(Predictor):
 
 
 
-    def predict(self, process_parameters, positions):
+    def predict(self, process_parameters, positions, as_df=False):
         """
         Predicts the output variable for a given number of input positions (uniformly distributed between the min/max values used for training).
 
         :param process_parameters: dictionary containing the value of all process parameters.
         :param positions: number of input positions to be used for the prediction.
-        :return: (x, y) where x is an array of 1D positions and y the corresponding value of each output attribute.
+        :param as_df: whether the prediction should be returned as numpy arrays (False, default) or pandas dataframe (True).
         """
 
         if not self.has_config:
@@ -83,6 +83,12 @@ class CutPredictor(Predictor):
         if self.model is None:
             print("Error: no model has been trained yet.")
             return
+
+        if not isinstance(positions, int):
+            print("ERROR: positions must be a single integer.")
+            return
+
+        samples = np.linspace(self.min_values[attr], self.max_values[attr], positions)
 
         X = np.empty((positions, 0))
 
@@ -103,25 +109,24 @@ class CutPredictor(Predictor):
 
         # Position attribute is last
         for attr in self.position_attributes:
-            position = np.linspace(self.min_values[attr], self.max_values[attr], positions)
 
             if not self.angle_input:
 
                 if self.position_scaler == 'normal':
-                    values = (position.reshape((positions, 1)) - self.mean_values[attr] ) / self.std_values[attr]
+                    values = (samples.reshape((positions, 1)) - self.mean_values[attr] ) / self.std_values[attr]
                 else:
-                    values = (position.reshape((positions, 1)) - self.min_values[attr] ) / (self.max_values[attr] - self.min_values[attr])
+                    values = (samples.reshape((positions, 1)) - self.min_values[attr] ) / (self.max_values[attr] - self.min_values[attr])
 
                 X = np.concatenate((X, values), axis=1)
 
             else:
 
                 X = np.concatenate(
-                    (X, np.cos(position).reshape((positions, 1)) ), 
+                    (X, np.cos(samples).reshape((positions, 1)) ), 
                     axis=1
                 )
                 X = np.concatenate(
-                    (X, np.sin(position).reshape((positions, 1)) ), 
+                    (X, np.sin(samples).reshape((positions, 1)) ), 
                     axis=1
                 )
 
@@ -130,7 +135,17 @@ class CutPredictor(Predictor):
         for idx, attr in enumerate(self.output_attributes):
             y[:, idx] = self._rescale_output(attr, y[:, idx])
 
-        return position, y
+        # Return inputs and outputs
+        if as_df:
+            d = pd.DataFrame()
+            for i, attr in enumerate(self.position_attributes):
+                d[attr] = samples[:, i]
+            for i, attr in enumerate(self.output_attributes):
+                d[attr] = y[:, i]
+            return d
+
+        else:
+            return samples, y
 
 
     def _compare(self, doe_id):

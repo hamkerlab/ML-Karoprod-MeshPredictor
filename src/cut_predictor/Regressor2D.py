@@ -63,19 +63,31 @@ class ProjectionPredictor(Predictor):
         self._make_arrays()
 
 
-    def predict(self, process_parameters, positions):
+    def predict(self, process_parameters, positions, as_df=False):
         """
         Predicts the output variable for a given number of input positions (either uniformly distributed between the min/max values of each input dimension used for training, or a (N, 2) array).
 
         ```python
-        reg.predict(process_parameters={...}, positions=(100, 100))
-        # or:
-        reg.predict(process_parameters={...}, positions=np.array([[u, v] for u in np.linspace(0, 1, 100) for v in np.linspace(0, 1, 100)])
+        x, y = reg.predict(process_parameters={...}, positions=(100, 100))
+        ```
+        
+        or:
+
+        ```python
+        x, y = reg.predict(
+            process_parameters={...}, 
+            positions=pd.DataFrame(
+                {
+                    "u": np.linspace(0., 1. , 100), 
+                    "v": np.linspace(0., 1. , 100)
+                }
+            ).to_numpy()
+        )
         ```
 
         :param process_parameters: dictionary containing the value of all process parameters.
         :param positions: tuple of dimensions to be used for the prediction or (N, 2) numpy array of positions.
-        :return: (x, y) where x is a list of 2D positions and y the value of each output attribute as a numpy array.
+        :param as_df: whether the prediction should be returned as numpy arrays (False, default) or pandas dataframe (True).
         """
 
         if not self.has_config:
@@ -106,7 +118,7 @@ class ProjectionPredictor(Predictor):
             samples = positions
 
 
-        # Input matrix
+        # Process parameters
         X = np.empty((nb_points, 0))
         for idx, attr in enumerate(self.process_parameters):
 
@@ -138,7 +150,17 @@ class ProjectionPredictor(Predictor):
         for idx, attr in enumerate(self.output_attributes):
             result.append(self._rescale_output(attr, y[:, idx]).reshape(shape))
 
-        return samples, np.array(result)
+        # Return inputs and outputs
+        if as_df:
+            d = pd.DataFrame()
+            for i, attr in enumerate(self.position_attributes):
+                d[attr] = samples[:, i]
+            for i, attr in enumerate(self.output_attributes):
+                d[attr] = result[i]
+            return d
+
+        else:
+            return samples, np.array(result)
 
 
     def _compare(self, doe_id):

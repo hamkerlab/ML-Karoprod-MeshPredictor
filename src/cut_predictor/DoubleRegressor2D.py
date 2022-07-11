@@ -101,6 +101,9 @@ class DoubleProjectionPredictor(Predictor):
         # Get numpy arrays
         self._make_arrays()
 
+    #############################################################################################
+    ## Data preprocessing
+    #############################################################################################
 
     def _preprocess_parameters(self, doe_joining, doe_single):
 
@@ -140,7 +143,6 @@ class DoubleProjectionPredictor(Predictor):
                 self.df_doe = self.df_doe.join(onehot)
 
         # Single attributes
-
         for attr in self.process_parameters_single:
             if not attr in self.categorical_attributes_single: # numerical
                 data = self.df_doe_single_raw[attr]
@@ -253,18 +255,116 @@ class DoubleProjectionPredictor(Predictor):
             if self.validation_method == "leaveoneout":
                 print("Number of experiments in the test set:", self.number_test_experiments)
 
+    #############################################################################################
+    ## IO
+    #############################################################################################
 
-    def predict(self, process_parameters, shape):
+    def _get_config(self):
+
+        config = {
+            # Features
+            'process_parameters': self.process_parameters,
+            'process_parameters_joining': self.process_parameters_joining,
+            'process_parameters_single': self.process_parameters_single,
+
+            'position_attributes': self.position_attributes,
+            'output_attributes': self.output_attributes,
+
+            'categorical_attributes': self.categorical_attributes,
+            'categorical_attributes_joining': self.categorical_attributes_joining,
+            'categorical_attributes_single': self.categorical_attributes_single,
+
+            'angle_input': self.angle_input,
+            'position_scaler': self.position_scaler,
+
+            'doe_id': self.doe_id,
+            'doe_id_joining': self.doe_id_joining,
+            'doe_id_single': self.doe_id_single,
+
+            'features': self.features,
+            'categorical_values': self.categorical_values,
+
+            # Min/Max/Mean/Std values
+            'min_values': self.min_values,
+            'max_values': self.max_values,
+            'mean_values': self.mean_values,
+            'std_values': self.std_values,
+
+            # Data shape
+            'input_shape': self.input_shape,
+            'number_samples': self.number_samples,
+
+            'part_index': self.part_index,
+            'top_bottom': self.top_bottom,
+        }
+
+        #for key, val in config.items():
+        #    print(key, val, type(val))
+
+        return config
+
+    def _set_config(self, config):
+        
+        self.process_parameters = config['process_parameters']
+        self.process_parameters_joining = config['process_parameters_joining']
+        self.process_parameters_single = config['process_parameters_single']
+
+        self.position_attributes = config['position_attributes']
+        self.output_attributes = config['output_attributes']
+        
+        self.categorical_attributes = config['categorical_attributes']
+        self.categorical_attributes_joining = config['categorical_attributes_joining']
+        self.categorical_attributes_single = config['categorical_attributes_single']
+
+        self.angle_input = config['angle_input']
+        self.position_scaler  = config['position_scaler']
+        
+        self.doe_id = config['doe_id']
+        self.doe_id_joining = config['doe_id_joining']
+        self.doe_id_single = config['doe_id_single']
+
+        self.features = config['features']
+        self.categorical_values = config['categorical_values']
+
+        # Min/Max/Mean/Std values
+        self.min_values = config['min_values']
+        self.max_values = config['max_values']
+        self.mean_values = config['mean_values']
+        self.std_values = config['std_values']
+
+        # Data shape
+        self.input_shape = config['input_shape']
+        self.number_samples = config['number_samples']
+
+        self.part_index = config['part_index']
+        self.top_bottom = config['top_bottom']
+
+
+    #############################################################################################
+    ## Inference
+    #############################################################################################
+
+    def predict(self, process_parameters, positions):
         """
-        Predicts the output variable for a given number of input positions (uniformly distributed between the min/max values of each input dimension used for training).
+        Predicts the output variable(s) for a given number of input positions (either uniformly distributed between the min/max values of each input dimension used for training, or a (N, 2) array).
 
         ```python
-        reg.predict(process_parameters={...}, shape=(100, 100))
+        reg.predict(process_parameters={...}, positions=(100, 100))
+        # or:
+        reg.predict(
+            process_parameters={...}, 
+            positions=pd.DataFrame(
+                {
+                    "u": np.linspace(0., 1. , 100), 
+                    "v": np.linspace(0., 1. , 100)
+                }
+            ).to_numpy()
+        )
         ```
 
         :param process_parameters: dictionary containing the value of all process parameters.
-        :param shape: tuple of dimensions to be used for the prediction.
-        :return: (x, y) where x is a list of 2D positions and y the value of each output attribute.
+        :param positions: tuple of dimensions to be used for the prediction or (N, 2) numpy array of positions.
+        :return: (x, y) where x is a list of 2D positions and y the value of each output attribute as a numpy array.
         """
 
         if not self.has_config:
@@ -275,49 +375,71 @@ class DoubleProjectionPredictor(Predictor):
             print("Error: no model has been trained yet.")
             return
 
-        nb_points = shape[0] * shape[1]
+        # Generate inputs
+        if isinstance(positions, tuple):
+            shape = positions
+            nb_points = shape[0] * shape[1]
 
+            x = np.linspace(self.min_values[self.position_attributes[0]], self.max_values[self.position_attributes[0]], shape[0])
+            y = np.linspace(self.min_values[self.position_attributes[1]], self.max_values[self.position_attributes[1]], shape[1])
+
+            samples = np.array([[i, j] for i in x for j in y])
+
+        elif isinstance(positions, np.ndarray):
+
+            nb_points, d = positions.shape
+            shape = (nb_points, 1)
+            if d != 2:
+                print("ERROR: the positions must have the shape (N, 2).")
+                return
+            samples = positions
+
+        # Process parameters
         X = np.empty((nb_points, 0))
 
-        for idx, attr in enumerate(self.process_parameters):
-
-            if attr in self.categorical_attributes:
-                
+        # Joining attributes
+        for idx, attr in enumerate(self.process_parameters_joining):
+            print(attr)
+            if attr in self.categorical_attributes_joining: # numerical
                 code = one_hot([process_parameters[attr]], self.categorical_values[attr])
                 code = np.repeat(code, nb_points, axis=0)
-                
                 X = np.concatenate((X, code), axis=1)
 
             else:
-
                 val = ((process_parameters[attr] - self.mean_values[attr] ) / self.std_values[attr]) * np.ones((nb_points, 1))
-
                 X = np.concatenate((X, val ), axis=1)
 
+        # Top and bottom attributes
+        for suffix in ['_top', '_bot']:
+            for idx, attr in enumerate(self.process_parameters_single):
+                print(attr)
+                if attr in self.categorical_attributes_single: # numerical
+                    code = one_hot([process_parameters[attr+suffix]], self.categorical_values[attr])
+                    code = np.repeat(code, nb_points, axis=0)
+                    X = np.concatenate((X, code), axis=1)
+
+                else:
+                    val = ((process_parameters[attr+suffix] - self.mean_values[attr] ) / self.std_values[attr]) * np.ones((nb_points, 1))
+                    X = np.concatenate((X, val ), axis=1)
+
+        # Part index (1 for top, 0 for bottom)
+        part = np.ones((nb_points, 1))
+        X = np.concatenate((X, part ), axis=1)
+
         # Position attributes are last
-        positions = []
-
-        x = np.linspace(self.min_values[self.position_attributes[0]], self.max_values[self.position_attributes[0]], shape[0])
-        y = np.linspace(self.min_values[self.position_attributes[1]], self.max_values[self.position_attributes[1]], shape[1])
-
-        positions = np.array([[i, j] for i in x for j in y])
-
         for i, attr in enumerate(self.position_attributes):
-            
             if self.position_scaler == 'normal':
-                values = (positions[:, i] - self.mean_values[attr] ) / self.std_values[attr]
+                values = (samples[:, i] - self.mean_values[attr] ) / self.std_values[attr]
             else:
-                values = (positions[:, i] - self.min_values[attr] ) / (self.max_values[attr] - self.min_values[attr])
-
+                values = (samples[:, i] - self.min_values[attr] ) / (self.max_values[attr] - self.min_values[attr])
+            
             X = np.concatenate((X, values.reshape((nb_points, 1))), axis=1)
 
-
+        # Predict outputs and de-normalize
         y = self.model.predict(X, batch_size=self.batch_size).reshape((nb_points, len(self.output_attributes)))
 
         result = []
-
         for idx, attr in enumerate(self.output_attributes):
-
             result.append(self._rescale_output(attr, y[:, idx]).reshape(shape))
 
         return positions, np.array(result)

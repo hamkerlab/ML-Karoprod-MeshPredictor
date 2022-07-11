@@ -48,3 +48,4 @@ config = {
 
 reg.custom_model(save_path='../models/best_x0_model', config=config, verbose=True)
 
+reg.save_h5("../models/x0.h5")

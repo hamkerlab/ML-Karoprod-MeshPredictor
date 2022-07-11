@@ -61,3 +61,5 @@ config = {
 
 reg.custom_model(save_path='../models/best_uv_thickness_model', config=config, verbose=True)
 reg.training_summary()
+
+reg.save_h5("../models/springback_uvmap_thickness.h5")

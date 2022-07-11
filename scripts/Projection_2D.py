@@ -48,3 +48,6 @@ best_config = reg.autotune(
     learning_rate=[1e-5, 1e-3]
 )
 print(best_config)
+
+
+reg.save_h5("../models/projection.h5")

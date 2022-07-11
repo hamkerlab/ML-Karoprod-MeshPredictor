@@ -48,3 +48,5 @@ best_config = reg.autotune(
 )
 print(best_config)
 
+
+reg.save_h5("../models/web.h5")

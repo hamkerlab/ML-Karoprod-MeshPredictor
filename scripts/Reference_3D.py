@@ -49,3 +49,5 @@ config = {
 
 reg.custom_model(save_path='../models/best_3d_model', config=config, verbose=True)
 reg.training_summary()
+
+reg.save_h5('../models/reference_3d.h5')

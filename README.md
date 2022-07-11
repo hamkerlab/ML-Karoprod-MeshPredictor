@@ -16,6 +16,7 @@ Dependencies:
 * ipywidgets
 * tensorflow >=2.6
 * optuna
+* h5py
 
 ```bash
 pip install git+https://github.com/hamkerlab/ML-Karoprod-CutPredictor.git@master

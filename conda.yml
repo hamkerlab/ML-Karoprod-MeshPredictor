@@ -13,5 +13,6 @@ dependencies:
   - matplotlib
   - ipywidgets
   - optuna
+  - h5py
   - pip:
     - tensorflow

@@ -8,10 +8,21 @@ import ipywidgets as widgets
 
 import os
 import pickle
+import json
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import tensorflow as tf
 import optuna
+
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
 
 def activation_layer(activation):
     if activation == 'lrelu':
@@ -22,8 +33,6 @@ def activation_layer(activation):
         return tf.keras.layers.ReLU()
     else:
         print("The activation function must be either relu, prelu or lrelu.")
-
-
 
 class Predictor(object):
     """
@@ -50,6 +59,10 @@ class Predictor(object):
         self.max_values = {}
         self.mean_values = {}
         self.std_values = {}
+
+    #############################################################################################
+    ## Data preprocessing
+    #############################################################################################
 
     def _preprocess_parameters(self, doe):
 
@@ -152,10 +165,11 @@ class Predictor(object):
             self.number_test_experiments = len(self.test_experiments)
 
             #test_indices = self.df_raw[self.df_raw[self.doe_id].isin(test_experiments)].index.values.to_numpy() - 1
-            test_indices = np.flatnonzero(self.df_raw[self.doe_id].isin(self.test_experiments))
-            
+            #test_indices = np.flatnonzero(self.df_raw[self.doe_id].isin(self.test_experiments))
+            test_indices = np.isin(self.doe_id_list, self.test_experiments)
             train_indices = np.ones(self.number_samples, dtype=bool)
             train_indices[test_indices] = False
+
             
             self.X_train = self.X[train_indices, :]
             self.X_test = self.X[test_indices, :]
@@ -208,14 +222,12 @@ class Predictor(object):
 
         return self.min_values[attr] + (self.max_values[attr] - self.min_values[attr]) * y
 
-    def save_config(self, filename):
-        """
-        Saves the configuration of the regressor, especially all variables derived from the data (min/max values, etc). 
+    #############################################################################################
+    ## IO
+    #############################################################################################
 
-        Needed to make predictions from a trained model without having to reload the data.
+    def _get_config(self):
 
-        :param filename: path to the pickle file where the information will be saved (extension: .pkl).
-        """
         config = {
             # Features
             'process_parameters': self.process_parameters,
@@ -242,20 +254,10 @@ class Predictor(object):
         #for key, val in config.items():
         #    print(key, val, type(val))
 
-        with open(filename, 'wb') as f:
-            pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
+        return config
 
-    def load_config(self, filename):
-        """
-        Loads data configuration from a pickle file created with save_config().
+    def _set_config(self, config):
         
-        :param filename: path to the pickle file where the information was saved.
-        """
-
-        with open(filename, 'rb') as f:
-            config  =  pickle.load(f)
-
-        # Features
         self.process_parameters = config['process_parameters']
         self.position_attributes = config['position_attributes']
         self.output_attributes = config['output_attributes']
@@ -276,8 +278,150 @@ class Predictor(object):
         self.input_shape = config['input_shape']
         self.number_samples = config['number_samples']
 
+    def save_config(self, filename):
+        """
+        Saves the configuration of the regressor, especially all variables derived from the data (min/max values, etc). 
+
+        Needed to make predictions from a trained model without having to reload the data.
+
+        :param filename: path to the pickle file where the information will be saved (extension: .pkl).
+        """
+        config = self._get_config()
+
+        with open(filename, 'wb') as f:
+            pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
+
+    def load_config(self, filename):
+        """
+        Loads data configuration from a pickle file created with save_config().
+        
+        :param filename: path to the pickle file where the information was saved.
+        """
+
+        with open(filename, 'rb') as f:
+            config  =  pickle.load(f)
+
+        self._set_config(config)
+
         self.has_config = True
-    
+
+    def load_network(self, load_path='best_model', batch_size=4096):
+        """
+        Load a pretrained network from a saved folder. The only parameter not saved by default is the batch size.
+
+        :param load_path: path to the directory where the best network was saved (default: 'best_model')
+        :param batch_size: batch size to be used (default: 4096).
+        """
+
+        if not self.has_config:
+            print("Error: The data has not been loaded yet.")
+            return
+
+        self.batch_size = batch_size
+        self.save_path = load_path
+
+        self.model = tf.keras.models.load_model(self.save_path)
+
+    @classmethod
+    def from_h5(cls, filename):
+        """
+        Creates a Regressor from a saved HDF5 file (using `save_h5()`).
+        
+        :param filename: path to the .h5 file.
+        """
+        reg = cls()
+        reg.load_h5(model_path=filename)
+        return reg
+
+    def save_h5(self, filename):
+        """
+        Saves both the model and the configuration in a hdf5 file.
+
+        :param filename: path to the .h5 file.
+        """
+        try:
+            import h5py
+        except:
+            print("ERROR: h5py is not installed.")
+            return
+
+        from tensorflow.python.keras.saving import hdf5_format
+
+        # Save model
+        with h5py.File(filename, mode='w') as f:
+            
+            hdf5_format.save_model_to_hdf5(self.model, f)
+
+            f.attrs['batch_size'] = self.batch_size
+
+            # Features
+            f.attrs['process_parameters'] = self.process_parameters
+            f.attrs['position_attributes'] = self.position_attributes,
+            f.attrs['output_attributes'] = self.output_attributes,
+            f.attrs['categorical_attributes'] = self.categorical_attributes
+            f.attrs['angle_input'] = self.angle_input,
+            f.attrs['position_scaler'] = self.position_scaler,
+            f.attrs['doe_id'] = self.doe_id,
+            f.attrs['features'] = self.features,
+            f.attrs['categorical_values'] = json.dumps(self.categorical_values, cls=NpEncoder) #self.categorical_values,
+
+            # Min/Max/Mean/Std values
+            f.attrs['min_values'] = json.dumps(self.min_values, cls=NpEncoder)#self.min_values,
+            f.attrs['max_values'] = json.dumps(self.max_values, cls=NpEncoder) #self.max_values,
+            f.attrs['mean_values'] = json.dumps(self.mean_values, cls=NpEncoder) #self.mean_values,
+            f.attrs['std_values'] = json.dumps(self.std_values, cls=NpEncoder) #self.std_values,
+
+            # Data shape
+            f.attrs['input_shape'] = self.input_shape,
+            f.attrs['number_samples'] = self.number_samples,
+
+    def load_h5(self, filename):
+        """
+        Loads a model and its configuration from an hdf5 file.
+
+        :param filename: path to the .h5 file.
+        """
+
+        try:
+            import h5py
+        except:
+            print("ERROR: h5py is not installed.")
+            return
+
+        from tensorflow.python.keras.saving import hdf5_format
+
+        # Load model
+        with h5py.File(filename, mode='r') as f:
+            self.model = hdf5_format.load_model_from_hdf5(f)
+
+            self.batch_size = f.attrs['batch_size']
+
+            # Features
+            self.process_parameters = f.attrs['process_parameters'].ravel().tolist()
+            self.position_attributes = f.attrs['position_attributes'].ravel().tolist()
+            self.output_attributes = f.attrs['output_attributes'].ravel().tolist()
+            self.categorical_attributes = f.attrs['categorical_attributes'].ravel().tolist()
+            self.angle_input = bool(f.attrs['angle_input'])
+            self.position_scaler  = f.attrs['position_scaler'].ravel().tolist()
+            self.doe_id = f.attrs['doe_id']
+            self.features = f.attrs['features'].ravel().tolist()
+            self.categorical_values = json.loads(f.attrs['categorical_values'])
+
+            # Min/Max/Mean/Std values
+            self.min_values = json.loads(f.attrs['min_values'])
+            self.max_values = json.loads(f.attrs['max_values'])
+            self.mean_values = json.loads(f.attrs['mean_values'])
+            self.std_values = json.loads(f.attrs['std_values'])
+
+            # Data shape
+            self.input_shape = f.attrs['input_shape']
+            self.number_samples = f.attrs['number_samples']
+
+            self.has_config = True
+
+    #############################################################################################
+    ## Neural network
+    #############################################################################################
 
     def _create_model(self, config):
 
@@ -556,22 +700,10 @@ class Predictor(object):
             plt.ylabel(attr)
             plt.savefig(self.save_path + "/distribution_" + attr + ".png")
 
-    def load_network(self, load_path='best_model', batch_size=4096):
-        """
-        Load a pretrained network from a saved folder. The only parameter not saved by default is the batch size.
 
-        :param load_path: path to the directory where the best network was saved (default: 'best_model')
-        :param batch_size: batch size to be used (default: 4096).
-        """
-
-        if not self.has_config:
-            print("Error: The data has not been loaded yet.")
-            return
-
-        self.batch_size = batch_size
-        self.save_path = load_path
-
-        self.model = tf.keras.models.load_model(self.save_path)
+    #############################################################################################
+    ## Inference
+    #############################################################################################
 
     def compare(self, doe_id):
         """
@@ -644,6 +776,10 @@ class Predictor(object):
 
         self._visualization_function(x, y)
         
+
+    #############################################################################################
+    ## Optimization
+    #############################################################################################
 
     def optimize(self, objective, positions, nb_trials, fixed={}):
         """

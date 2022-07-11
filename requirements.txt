@@ -5,3 +5,4 @@ scikit-learn
 ipywidgets
 tensorflow
 optuna
+h5py

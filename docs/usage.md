@@ -185,6 +185,18 @@ and finally load the weights of the trained model:
 reg.load(load_path='best_model')
 ```
 
+Alternatively, you can save both the configuration and the trained network in a single HDF5 file:
+
+```python
+reg.save_h5(filename='best_model.h5')
+```
+
+and create a regressor for inference using the class method `from_h5`:
+
+```python
+reg = CutPredictor.from_h5(filename='best_model.h5')
+```
+
 ## Optimization of the process parameters
 
 Once a model is trained or loaded, it can be used to predict which value of the process parameters minimize a user-defined criterion.

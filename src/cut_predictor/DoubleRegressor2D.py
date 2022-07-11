@@ -6,7 +6,17 @@ import matplotlib.pyplot as plt
 from .Predictor import Predictor
 from .Utils import one_hot
 
+def onehot_topbot(df, attr, values, suffix):
 
+    res = pd.DataFrame()
+
+    for val in values:
+
+        column_name = attr + '_' + str(val) + suffix
+
+        res[column_name] = df.apply(lambda x: 1 if x == val else 0)
+
+    return res
 
 class DoubleProjectionPredictor(Predictor):
     """
@@ -169,7 +179,8 @@ class DoubleProjectionPredictor(Predictor):
 
                 else: # categorical
 
-                    onehot = pd.get_dummies(self.df_doe_raw[attr + suffix], prefix=attr+suffix)
+                    #onehot = pd.get_dummies(self.df_doe_raw[attr + suffix], prefix=attr+suffix)
+                    onehot = onehot_topbot(self.df_doe_raw[attr + suffix], attr, self.categorical_values[attr],  suffix)
                     for val in onehot.keys():
                         self.features.append(val)
 

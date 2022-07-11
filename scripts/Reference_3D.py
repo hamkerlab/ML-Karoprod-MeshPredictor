@@ -40,8 +40,8 @@ reg.save_config("../models/3d.pkl")
 
 config = {
     'batch_size': 2048*16,
-    'max_epochs': 20,
-    'layers': [256, 128, 256, 256, 256],
+    'max_epochs': 100,
+    'layers': [256, 256, 256, 256, 256],
     'dropout': 0.0,
     'learning_rate': 0.001,
     'activation': 'lrelu'

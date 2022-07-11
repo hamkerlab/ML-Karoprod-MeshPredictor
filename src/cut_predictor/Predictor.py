@@ -330,7 +330,7 @@ class Predictor(object):
         :param filename: path to the .h5 file.
         """
         reg = cls()
-        reg.load_h5(model_path=filename)
+        reg.load_h5(filename)
         return reg
 
     def save_h5(self, filename):

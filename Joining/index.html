@@ -1328,7 +1328,7 @@
     <span class="n">validation_method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span>
 
 <span class="p">)</span>
-<span class="n">reg</span><span class="o">.</span><span class="n">save_config</span><span class="p">(</span><span class="s2">&quot;../models/joining.pkl&quot;</span><span class="p">)</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">save_config</span><span class="p">(</span><span class="s2">&quot;../models/joining_xyz.pkl&quot;</span><span class="p">)</span>
 <span class="n">reg</span><span class="o">.</span><span class="n">data_summary</span><span class="p">()</span>
 </code></pre></div>
 
@@ -1354,7 +1354,7 @@ Single process parameters:
     - Ziehspalt : categorical [1.6, 2.4]
     - Einlegeposition : numerical [ -5  ...  5 ]
     - Ziehtiefe : categorical [30, 50, 70]
-    - Stempel_ID : categorical [2, 3]
+    - Rp0 : numerical [ 133.18263199999998  ...  296.5565 ]
 Input variables:
     - u : numerical, [ 0.0 / 1.0 ] 
     - v : numerical, [ 0.0 / 1.0 ] 
@@ -1363,7 +1363,7 @@ Output variable(s):
     - y : numerical, [ -122.5980301 / 99.30913544 ]
     - z : numerical, [ -50.89810181 / 57.64501572 ]
 
-Inputs (14754123, 26)
+Inputs (14754123, 24)
 Outputs (14754123, 3)
 Total number of experiments: 321
 Total number of samples: 14754123

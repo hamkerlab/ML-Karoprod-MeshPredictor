@@ -59,3 +59,5 @@ config = {
 }
 
 reg.custom_model(save_path='../models/best_joining_xyz_model', config=config, verbose=True)
+
+reg.save_h5('../models/joining_xyz.h5')

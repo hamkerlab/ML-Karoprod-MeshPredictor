@@ -77,7 +77,7 @@ class ProjectionPredictor(Predictor):
         :param positions: tuple of dimensions to be used for the prediction or (N, 2) numpy array of positions.
         :return: (x, y) where x is a list of 2D positions and y the value of each output attribute as a numpy array.
         """
-
+        export_df = False # export dataframe flag
         if not self.has_config:
             print("Error: The data has not been loaded yet.")
             return
@@ -105,6 +105,17 @@ class ProjectionPredictor(Predictor):
                 return
             samples = positions
 
+        elif isinstance(positions, pd.DataFrame):
+            export_df = True
+            df = positions
+            positions = positions[self.position_attributes].to_numpy()
+
+            nb_points, d = positions.shape
+            shape = (nb_points, 1)
+            if d != 2:
+                print("ERROR: the positions must have the shape (N, 2).")
+                return
+            samples = positions
 
         # Input matrix
         X = np.empty((nb_points, 0))
@@ -137,6 +148,11 @@ class ProjectionPredictor(Predictor):
         result = []
         for idx, attr in enumerate(self.output_attributes):
             result.append(self._rescale_output(attr, y[:, idx]).reshape(shape))
+
+        # export dataframe
+        if export_df is True:
+            dfr = pd.DataFrame(np.array(result)[:,:,0].T, columns=self.output_attributes, index=df.index)
+            return df.join(dfr)
 
         return samples, np.array(result)
 

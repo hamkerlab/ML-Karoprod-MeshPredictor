@@ -44,20 +44,22 @@ reg.load_data(
     part_index='pos', 
     top_bottom=['Oberblech_ID', 'Unterblech_ID'],
     validation_split=0.1, 
-    validation_method="random"
+    validation_method="random",
+    # position_scaler="minmax",
 
 )
 reg.save_config("../models/joining_xyz.pkl")
 
 config = {
     'batch_size': 2048*16,
-    'max_epochs': 50,
-    'layers': [256, 256, 256, 256, 256],
+    'max_epochs': 100,
+    'layers': [512, 512, 512, 256, 256],
     'dropout': 0.0,
     'learning_rate': 0.001,
     'activation': 'lrelu'
 }
 
 reg.custom_model(save_path='../models/best_joining_xyz_model', config=config, verbose=True)
+reg.training_summary()
 
-reg.save_h5('../models/joining_xyz.h5')
+#reg.save_h5('../models/joining_xyz.h5')

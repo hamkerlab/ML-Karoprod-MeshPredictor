@@ -461,6 +461,7 @@ class DoubleProjectionPredictor(Predictor):
         # Return inputs and outputs
         if as_df:
             d = pd.DataFrame()
+            d['part'] = X[:, -3]
             for i, attr in enumerate(self.position_attributes):
                 d[attr] = np.concatenate((samples[:, i], samples[:, i]), axis=0)
             for i, attr in enumerate(self.output_attributes):

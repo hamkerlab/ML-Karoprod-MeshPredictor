@@ -7,3 +7,6 @@ docs/*.ipynb
 *__pycache__
 *.pkl
 src/cut_predictor.egg-info/
+notebooks/checkpoint
+notebooks/tmp_model.data-00000-of-00001
+notebooks/tmp_model.index

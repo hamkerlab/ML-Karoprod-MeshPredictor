@@ -1,9 +1,11 @@
 import sys
+import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from .Predictor import Predictor
+from .Predictor import NpEncoder
 from .Utils import one_hot
 
 def onehot_topbot(df, attr, values, suffix):
@@ -349,6 +351,126 @@ class DoubleProjectionPredictor(Predictor):
 
         self.part_index = config['part_index']
         self.top_bottom = config['top_bottom']
+
+    @classmethod
+    def from_h5(cls, filename):
+        """
+        Creates a Regressor from a saved HDF5 file (using `save_h5()`).
+        
+        :param filename: path to the .h5 file.
+        """
+        reg = cls()
+        reg.load_h5(filename)
+        return reg
+
+    def save_h5(self, filename):
+        """
+        Saves both the model and the configuration in a hdf5 file.
+
+        :param filename: path to the .h5 file.
+        """
+        try:
+            import h5py
+        except:
+            print("ERROR: h5py is not installed.")
+            return
+
+        from tensorflow.python.keras.saving import hdf5_format
+
+        # Save model
+        with h5py.File(filename, mode='w') as f:
+            
+            hdf5_format.save_model_to_hdf5(self.model, f)
+
+            f.attrs['batch_size'] = self.batch_size
+
+            # Features
+            f.attrs['process_parameters'] = self.process_parameters
+            f.attrs['process_parameters_joining'] = self.process_parameters_joining
+            f.attrs['process_parameters_single'] = self.process_parameters_single
+            f.attrs['position_attributes'] = self.position_attributes
+            f.attrs['output_attributes'] = self.output_attributes,
+            f.attrs['categorical_attributes'] = self.categorical_attributes
+            f.attrs['categorical_attributes_joining'] = self.categorical_attributes_joining
+            f.attrs['categorical_attributes_single'] = self.categorical_attributes_single
+
+            f.attrs['angle_input'] = self.angle_input
+            f.attrs['position_scaler'] = self.position_scaler
+            f.attrs['doe_id'] = self.doe_id
+            f.attrs['doe_id_joining'] = self.doe_id_joining
+            f.attrs['doe_id_single'] = self.doe_id_single
+
+
+            f.attrs['features'] = self.features,
+            f.attrs['categorical_values'] = json.dumps(self.categorical_values, cls=NpEncoder) #self.categorical_values,
+
+            # Min/Max/Mean/Std values
+            f.attrs['min_values'] = json.dumps(self.min_values, cls=NpEncoder)#self.min_values,
+            f.attrs['max_values'] = json.dumps(self.max_values, cls=NpEncoder) #self.max_values,
+            f.attrs['mean_values'] = json.dumps(self.mean_values, cls=NpEncoder) #self.mean_values,
+            f.attrs['std_values'] = json.dumps(self.std_values, cls=NpEncoder) #self.std_values,
+
+            # Data shape
+            f.attrs['input_shape'] = self.input_shape
+            f.attrs['number_samples'] = self.number_samples
+            f.attrs['part_index'] = self.part_index
+            f.attrs['top_bottom'] = self.top_bottom
+
+
+    def load_h5(self, filename):
+        """
+        Loads a model and its configuration from an hdf5 file.
+
+        :param filename: path to the .h5 file.
+        """
+
+        try:
+            import h5py
+        except:
+            print("ERROR: h5py is not installed.")
+            return
+
+        from tensorflow.python.keras.saving import hdf5_format
+
+        # Load model
+        with h5py.File(filename, mode='r') as f:
+            self.model = hdf5_format.load_model_from_hdf5(f)
+
+            self.batch_size = f.attrs['batch_size']
+
+            # Features
+            self.process_parameters = f.attrs['process_parameters'].ravel().tolist()
+            self.process_parameters_joining = f.attrs['process_parameters_joining'].ravel().tolist()
+            self.process_parameters_single = f.attrs['process_parameters_single'].ravel().tolist()
+            self.position_attributes = f.attrs['position_attributes'].ravel().tolist()
+            self.output_attributes = f.attrs['output_attributes'].ravel().tolist()
+            self.categorical_attributes = f.attrs['categorical_attributes'].ravel().tolist()
+            self.categorical_attributes_joining = f.attrs['categorical_attributes_joining'].ravel().tolist()
+            self.categorical_attributes_single = f.attrs['categorical_attributes_single'].ravel().tolist()
+
+
+            self.angle_input = bool(f.attrs['angle_input'])
+            self.position_scaler  = f.attrs['position_scaler']
+            self.doe_id = f.attrs['doe_id']
+            self.doe_id_joining = f.attrs['doe_id_joining']
+            self.doe_id_single = f.attrs['doe_id_single']
+
+            self.features = f.attrs['features'].ravel().tolist()
+            self.categorical_values = json.loads(f.attrs['categorical_values'])
+
+            # Min/Max/Mean/Std values
+            self.min_values = json.loads(f.attrs['min_values'])
+            self.max_values = json.loads(f.attrs['max_values'])
+            self.mean_values = json.loads(f.attrs['mean_values'])
+            self.std_values = json.loads(f.attrs['std_values'])
+
+            # Data shape
+            self.input_shape = f.attrs['input_shape']
+            self.number_samples = f.attrs['number_samples']
+            self.part_index = f.attrs['part_index']
+            self.top_bottom = f.attrs['top_bottom']
+
+            self.has_config = True
 
 
     #############################################################################################

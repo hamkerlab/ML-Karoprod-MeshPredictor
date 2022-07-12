@@ -51,13 +51,14 @@ reg.save_config("../models/joining_thickness.pkl")
 
 config = {
     'batch_size': 2048*16,
-    'max_epochs': 50,
-    'layers': [256, 256, 256, 256, 256],
+    'max_epochs': 100,
+    'layers': [512, 512, 256, 256, 256],
     'dropout': 0.0,
     'learning_rate': 0.001,
     'activation': 'lrelu'
 }
 
 reg.custom_model(save_path='../models/best_joining_thickness_model', config=config, verbose=True)
+reg.training_summary()
 
-reg.save_h5('../models/joining_thickness.h5')
+#reg.save_h5('../models/joining_thickness.h5')

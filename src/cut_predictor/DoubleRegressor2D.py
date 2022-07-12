@@ -355,7 +355,7 @@ class DoubleProjectionPredictor(Predictor):
     ## Inference
     #############################################################################################
 
-    def predict(self, process_parameters, positions):
+    def predict(self, process_parameters, positions, as_df=False):
         """
         Predicts the output variable(s) for a given number of input positions (either uniformly distributed between the min/max values of each input dimension used for training, or a (N, 2) array).
 
@@ -375,7 +375,7 @@ class DoubleProjectionPredictor(Predictor):
 
         :param process_parameters: dictionary containing the value of all process parameters.
         :param positions: tuple of dimensions to be used for the prediction or (N, 2) numpy array of positions.
-        :return: (x, y) where x is a list of 2D positions and y the value of each output attribute as a numpy array.
+        :param as_df: whether the prediction should be returned as numpy arrays (False, default) or pandas dataframe (True).
         """
 
         if not self.has_config:
@@ -410,7 +410,6 @@ class DoubleProjectionPredictor(Predictor):
 
         # Joining attributes
         for idx, attr in enumerate(self.process_parameters_joining):
-            print(attr)
             if attr in self.categorical_attributes_joining: # numerical
                 code = one_hot([process_parameters[attr]], self.categorical_values[attr])
                 code = np.repeat(code, nb_points, axis=0)
@@ -423,7 +422,6 @@ class DoubleProjectionPredictor(Predictor):
         # Top and bottom attributes
         for suffix in ['_top', '_bot']:
             for idx, attr in enumerate(self.process_parameters_single):
-                print(attr)
                 if attr in self.categorical_attributes_single: # numerical
                     code = one_hot([process_parameters[attr+suffix]], self.categorical_values[attr])
                     code = np.repeat(code, nb_points, axis=0)
@@ -446,14 +444,31 @@ class DoubleProjectionPredictor(Predictor):
             
             X = np.concatenate((X, values.reshape((nb_points, 1))), axis=1)
 
+        # Concatenate the bottom part
+        X_bottom = X.copy()
+        X_bottom[:, -3] = 0
+        X = np.concatenate((X, X_bottom), axis=0)
+
+
         # Predict outputs and de-normalize
-        y = self.model.predict(X, batch_size=self.batch_size).reshape((nb_points, len(self.output_attributes)))
+        y = self.model.predict(X, batch_size=self.batch_size)
 
         result = []
         for idx, attr in enumerate(self.output_attributes):
-            result.append(self._rescale_output(attr, y[:, idx]).reshape(shape))
+            result.append(self._rescale_output(attr, y[:, idx]))
 
-        return positions, np.array(result)
+
+        # Return inputs and outputs
+        if as_df:
+            d = pd.DataFrame()
+            for i, attr in enumerate(self.position_attributes):
+                d[attr] = np.concatenate((samples[:, i], samples[:, i]), axis=0)
+            for i, attr in enumerate(self.output_attributes):
+                d[attr] = result[i]
+            return d
+
+        else:
+            return samples, np.array(result)
 
 
     def _compare(self, doe_id):

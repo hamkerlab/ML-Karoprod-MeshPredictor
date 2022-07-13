@@ -510,12 +510,14 @@ class Model:
 
 
 class UV2d:
-    def __init__(self, name=None, nodes=None, elements=None, elsize=None):
+    def __init__(self, name=None, nodes=None, elements=None, elsize=None, reg_xyz=None, reg_results=None):
         if name is None:
             name = "N.N."
         self.metadata = {"name": name, "elsize": elsize}
         self.nodes = nodes
         self.elements = elements
+        self.reg_xyz = reg_xyz
+        self.reg_results = reg_results
 
     def load_h5(self, h5filepath):
         with pd.HDFStore(h5filepath, mode="r") as store:
@@ -562,6 +564,58 @@ class UV2d:
         ax.set_title(f"Prediction {result_name}")
         fig.tight_layout()
         return fig
+
+    def predict(self, param):
+        self.param = param
+        uv = self
+        uv.elements = self.reg_results.predict(param, uv.elements)
+        uv.elements = self.reg_xyz.predict(param, uv.elements)
+        uv.nodes = self.reg_xyz.predict(param, uv.nodes)
+        uv.nodes = self.reg_results.predict(param, uv.nodes)
+
+    def plot_results_grid_u(self, result_name, u=.5):
+        uv = self
+        fig = plt.figure(1, figsize=(18, 10))
+        ax3d = fig.add_subplot(221, projection="3d")
+        ax2d = fig.add_subplot(222)
+        axyz = fig.add_subplot(223)
+        axr = fig.add_subplot(224)
+        ax2d.set_aspect("equal", "datalim")
+        c = ax3d.plot_trisurf(uv.nodes.x, uv.nodes.y, uv.nodes.z,
+                              triangles=uv.elements.simplices.tolist(), cmap=plt.cm.Spectral_r,
+                              alpha=.7, shade=False, linewidth=2)
+        c.set_array(uv.elements[result_name])
+        cbar = fig.colorbar(c, fraction=.015, label=result_name, ax=ax3d)
+        ax3d.set_xlabel("x")
+        ax3d.set_ylabel("y")
+        ax3d.set_zlabel("z")
+        ax2d.set_xlabel("u")
+        ax2d.set_ylabel("v")
+        axyz.set_xlabel("y")
+        axyz.set_ylabel("z")
+        axr.set_xlabel("v")
+        axr.set_ylabel(result_name)
+        ax3d.set_title(f"Prediction {result_name}")
+        # ax2d.scatter(uv.elements.u, uv.elements.v, c=uv.elements[result_name], s=10, cmap=plt.cm.Spectral_r)
+        ax2d.tripcolor(uv.nodes.u, uv.nodes.v, uv.elements.simplices.tolist(),
+                       uv.nodes[result_name],
+                       cmap=plt.cm.Spectral_r, alpha=.5)
+
+        u = 0.5
+        df = pd.DataFrame({"v": np.linspace(0., 1, 100), "u": u})
+        dfr = self.reg_xyz.predict(self.param, df)
+        dfr = self.reg_results.predict(self.param, dfr)
+        # ax3d.scatter(dfr.x, dfr.y, dfr.z, s=10)
+        ax3d.plot(dfr.x, dfr.y, dfr.z, c="k")
+        # axyz.scatter(dfr.y, dfr.z, s=10)
+        axyz.plot(dfr.y, dfr.z, c="k")
+        axyz.set_title(f"cut u={u}")
+        axr.set_title(f"{result_name}")
+        ax2d.plot(dfr.u, dfr.v, c="k")
+        axr.plot(dfr.v, dfr[result_name], c="k")
+        axr.scatter(dfr.v, dfr[result_name], c=dfr[result_name], cmap=plt.cm.Spectral_r, alpha=.5)
+        axr.axhline(0, c="k", lw=1, alpha=.5)
+        fig.tight_layout()
 
 class BananaKNeighborsRegressor():
     def __init__(self, inputparameter, n_neighbors=20, weights="distance"):

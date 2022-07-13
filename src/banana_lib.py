@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import copy
 import scipy.interpolate
 import numpy.linalg as nl
 import scipy.spatial
@@ -519,6 +520,9 @@ class UV2d:
         self.reg_xyz = reg_xyz
         self.reg_results = reg_results
 
+    def copy(self):
+        return copy.deepcopy(self)
+
     def load_h5(self, h5filepath):
         with pd.HDFStore(h5filepath, mode="r") as store:
             self.nodes = store.get(f'/nodes')
@@ -620,6 +624,75 @@ class UV2d:
         axr.axhline(0, c="k", lw=1, alpha=.5)
         fig.tight_layout()
         return fig
+
+
+class UVJoint:
+    def __init__(self, uv, reg_xyz=None, reg_results=None):
+        self.uv_top = uv.copy()
+        self.uv_bot = uv.copy()
+        self.reg_xyz = reg_xyz
+        self.reg_results = reg_results
+
+    def predict(self, param):
+        uvj._predict_nodes(process_parameters, self.reg_xyz)
+        uvj._predict_nodes(process_parameters, self.reg_results)
+        uvj._predict_elements(process_parameters, self.reg_xyz)
+        uvj._predict_elements(process_parameters, self.reg_results)
+
+    def _predict_nodes(self, param, reg):
+        df = reg.predict(
+            process_parameters,
+            positions=self.uv_top.nodes,
+            as_df=True
+        )
+
+        df_top = df[df.part == 1].copy()
+        df_top.index = self.uv_top.nodes.index
+        for output_attribute in reg.output_attributes:
+            self.uv_top.nodes[output_attribute] = df_top[output_attribute]
+
+        df_bot = df[df.part == 0].copy()
+        df_bot.index = self.uv_bot.nodes.index
+        for output_attribute in reg.output_attributes:
+            self.uv_bot.nodes[output_attribute] = df_bot[output_attribute]
+
+    def _predict_elements(self, param, reg):
+        df = reg.predict(
+            process_parameters,
+            positions=self.uv_top.elements,
+            as_df=True
+        )
+
+        df_top = df[df.part == 1].copy()
+        df_top.index = self.uv_top.elements.index
+        for output_attribute in reg.output_attributes:
+            self.uv_top.elements[output_attribute] = df_top[output_attribute]
+
+        df_bot = df[df.part == 0].copy()
+        df_bot.index = self.uv_bot.elements.index
+        for output_attribute in reg.output_attributes:
+            self.uv_bot.elements[output_attribute] = df_bot[output_attribute]
+
+    def plot_3d(self, result_name):
+        fig = plt.figure(1, figsize=(18, 10))
+        ax = fig.add_subplot(111, projection="3d")
+        c_bot = ax.plot_trisurf(self.uv_bot.nodes.x, self.uv_bot.nodes.y, self.uv_bot.nodes.z,
+                                triangles=self.uv_bot.elements.simplices.tolist(), cmap=plt.cm.Spectral_r,
+                                alpha=.7, shade=False, linewidth=2)
+        c_top = ax.plot_trisurf(self.uv_top.nodes.x, self.uv_top.nodes.y, self.uv_top.nodes.z,
+                                triangles=self.uv_top.elements.simplices.tolist(), cmap=plt.cm.Spectral_r,
+                                alpha=.7, shade=False, linewidth=2)
+        # result_name = "x"
+        c_top.set_array(self.uv_top.elements[result_name])
+        c_bot.set_array(self.uv_bot.elements[result_name])
+        cbar = fig.colorbar(c_top, fraction=.015, label=result_name, ax=ax)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+        # ax.set_title(f"Prediction {result_name}")
+        fig.tight_layout()
+        return fig
+
 
 class BananaKNeighborsRegressor():
     def __init__(self, inputparameter, n_neighbors=20, weights="distance"):

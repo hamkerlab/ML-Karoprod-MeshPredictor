@@ -527,6 +527,17 @@ class DoubleProjectionPredictor(Predictor):
                 return
             samples = positions
 
+        elif isinstance(positions, pd.DataFrame):
+            df = positions
+            positions = df[self.position_attributes].to_numpy()
+
+            nb_points, d = positions.shape
+            shape = (nb_points, 1)
+            if d != 2:
+                print("ERROR: the positions must have the shape (N, 2).")
+                return
+            samples = positions
+
         # Process parameters
         X = np.empty((nb_points, 0))
 

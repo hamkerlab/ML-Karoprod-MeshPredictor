@@ -84,7 +84,7 @@ st_u = st.sidebar.slider("u",
                          min_value=0.,
                          max_value=1.,
                          value=.5,
-                         step=0.05,
+                         step=0.01,
                          )
 st_n = st.sidebar.slider("no of cut points",
                          min_value=100,
@@ -101,9 +101,12 @@ st_elsize = st.sidebar.selectbox("grid resolution", uvgrids,
 elsize = float(st_elsize)
 filepath = f"../../uvgrids/uv_{elsize}.h5"
 uv = UV2d.from_h5(filepath)
-uv.elements = reg_results.predict(param, uv.elements)
-uv.elements = reg_xyz.predict(param, uv.elements)
-uv.nodes = reg_xyz.predict(param, uv.nodes)
+uv.reg_results = reg_results
+uv.reg_xyz = reg_xyz
+uv.predict(st_param)
+# uv.elements = reg_results.predict(param, uv.elements)
+# uv.elements = reg_xyz.predict(param, uv.elements)
+# uv.nodes = reg_xyz.predict(param, uv.nodes)
 
 
 
@@ -111,53 +114,56 @@ df = pd.DataFrame({"v": np.linspace(0., 1, st_n), "u": st_u})
 dfr = reg_xyz.predict(st_param, df)
 dfeps = reg_results.predict(st_param, dfr)
 
-
-
-fig = plt.figure(1, figsize=(18,10))
-ax = fig.add_subplot(111, projection="3d")
-c = ax.plot_trisurf(uv.nodes.x, uv.nodes.y, uv.nodes.z,
-                triangles=uv.elements.simplices.tolist(), cmap=plt.cm.Spectral_r,
-                alpha=.7, shade=False, linewidth=2)
 result_name = st_results_name
-c.set_array(uv.elements[result_name])
-cbar = fig.colorbar(c, fraction=.015, label=result_name, ax=ax)
-ax.set_xlabel("x")
-ax.set_ylabel("y")
-ax.set_zlabel("z")
-ax.set_title(f"Prediction {result_name}")
-fig.tight_layout()
+
+fig = uv.plot_results_grid_u(result_name=result_name, u=st_u)
 with _lock:
     st.write(fig)
 
+# fig = plt.figure(1, figsize=(18,10))
+# ax = fig.add_subplot(111, projection="3d")
+# c = ax.plot_trisurf(uv.nodes.x, uv.nodes.y, uv.nodes.z,
+#                 triangles=uv.elements.simplices.tolist(), cmap=plt.cm.Spectral_r,
+#                 alpha=.7, shade=False, linewidth=2)
+# c.set_array(uv.elements[result_name])
+# cbar = fig.colorbar(c, fraction=.015, label=result_name, ax=ax)
+# ax.set_xlabel("x")
+# ax.set_ylabel("y")
+# ax.set_zlabel("z")
+# ax.set_title(f"Prediction {result_name}")
+# fig.tight_layout()
+# with _lock:
+#     st.write(fig)
 
-B = 400 / 25.4
-H = 200 / 25.4
-fig, ax = plt.subplots(1, figsize=(B, H))
 
-#ax.scatter(dfr.y, dfr.z, c=np.linspace(0,1,len(dfr)))
-ax.scatter(dfr.y, dfr.z, c=dfeps[st_results_name]/dfeps[st_results_name].max())
+# B = 400 / 25.4
+# H = 200 / 25.4
+# fig, ax = plt.subplots(1, figsize=(B, H))
+#
+# #ax.scatter(dfr.y, dfr.z, c=np.linspace(0,1,len(dfr)))
+# ax.scatter(dfr.y, dfr.z, c=dfeps[st_results_name]/dfeps[st_results_name].max())
+#
+# ax.plot(dfr.y, dfr.z)
+# ax.set_xlabel("x")
+# ax.set_ylabel("z")
+# ax.set_ylim(-10, 80)
+# with _lock:
+#     st.write(fig)
 
-ax.plot(dfr.y, dfr.z)
-ax.set_xlabel("x")
-ax.set_ylabel("z")
-ax.set_ylim(-10, 80)
-with _lock:
-    st.write(fig)
-
-B = 400 / 25.4
-H = 200 / 25.4
-results_name = st_results_name
-figr, ax = plt.subplots(1, figsize=(B, H))
-ax.plot(dfeps.v, dfeps[results_name])
-ax.scatter(dfr.v, dfeps[results_name], c=dfeps[st_results_name]/dfeps[st_results_name].max())
-
-ax.set_xlabel("v")
-ax.set_ylabel(results_name)
-ax.set_ylim(0, dfeps[results_name].max()*1.1)
-if results_name=="thickness":
-    ax.axhline(st_range["Blechdicke"], ls="--", lw=1, alpha=.7, c="k")
-with _lock:
-    st.write(figr)
+# B = 400 / 25.4
+# H = 200 / 25.4
+# results_name = st_results_name
+# figr, ax = plt.subplots(1, figsize=(B, H))
+# ax.plot(dfeps.v, dfeps[results_name])
+# ax.scatter(dfr.v, dfeps[results_name], c=dfeps[st_results_name]/dfeps[st_results_name].max())
+#
+# ax.set_xlabel("v")
+# ax.set_ylabel(results_name)
+# ax.set_ylim(0, dfeps[results_name].max()*1.1)
+# if results_name=="thickness":
+#     ax.axhline(st_range["Blechdicke"], ls="--", lw=1, alpha=.7, c="k")
+# with _lock:
+#     st.write(figr)
 
 dfs = []
 for u in np.linspace(0, 1, 21):

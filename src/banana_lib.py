@@ -573,9 +573,11 @@ class UV2d:
         uv.nodes = self.reg_xyz.predict(param, uv.nodes)
         uv.nodes = self.reg_results.predict(param, uv.nodes)
 
-    def plot_results_grid_u(self, result_name, u=.5):
+    def plot_results_grid_u(self, result_name, u=.5, figsize=None):
+        if figsize is None:
+            figsize = (18, 10)
         uv = self
-        fig = plt.figure(1, figsize=(18, 10))
+        fig = plt.figure(1, figsize=figsize)
         ax3d = fig.add_subplot(221, projection="3d")
         ax2d = fig.add_subplot(222)
         axyz = fig.add_subplot(223)
@@ -597,11 +599,12 @@ class UV2d:
         axr.set_ylabel(result_name)
         ax3d.set_title(f"Prediction {result_name}")
         # ax2d.scatter(uv.elements.u, uv.elements.v, c=uv.elements[result_name], s=10, cmap=plt.cm.Spectral_r)
+        # ax2d.tripcolor(uv.nodes.u, uv.nodes.v, uv.elements.simplices.tolist(),
+        #                uv.nodes[result_name],
+        #                cmap=plt.cm.Spectral_r, alpha=.5)
         ax2d.tripcolor(uv.nodes.u, uv.nodes.v, uv.elements.simplices.tolist(),
-                       uv.nodes[result_name],
-                       cmap=plt.cm.Spectral_r, alpha=.5)
-
-        u = 0.5
+                       facecolors=uv.elements[result_name],
+                       cmap=plt.cm.Spectral_r, alpha=.5, linewidth=0, edgecolors="r")
         df = pd.DataFrame({"v": np.linspace(0., 1, 100), "u": u})
         dfr = self.reg_xyz.predict(self.param, df)
         dfr = self.reg_results.predict(self.param, dfr)
@@ -616,6 +619,7 @@ class UV2d:
         axr.scatter(dfr.v, dfr[result_name], c=dfr[result_name], cmap=plt.cm.Spectral_r, alpha=.5)
         axr.axhline(0, c="k", lw=1, alpha=.5)
         fig.tight_layout()
+        return fig
 
 class BananaKNeighborsRegressor():
     def __init__(self, inputparameter, n_neighbors=20, weights="distance"):

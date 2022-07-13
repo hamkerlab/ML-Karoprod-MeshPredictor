@@ -634,14 +634,14 @@ class UVJoint:
         self.reg_results = reg_results
 
     def predict(self, param):
-        uvj._predict_nodes(process_parameters, self.reg_xyz)
-        uvj._predict_nodes(process_parameters, self.reg_results)
-        uvj._predict_elements(process_parameters, self.reg_xyz)
-        uvj._predict_elements(process_parameters, self.reg_results)
+        self._predict_nodes(param, self.reg_xyz)
+        self._predict_nodes(param, self.reg_results)
+        self._predict_elements(param, self.reg_xyz)
+        self._predict_elements(param, self.reg_results)
 
     def _predict_nodes(self, param, reg):
         df = reg.predict(
-            process_parameters,
+            param,
             positions=self.uv_top.nodes,
             as_df=True
         )
@@ -658,7 +658,7 @@ class UVJoint:
 
     def _predict_elements(self, param, reg):
         df = reg.predict(
-            process_parameters,
+            param,
             positions=self.uv_top.elements,
             as_df=True
         )
@@ -673,8 +673,10 @@ class UVJoint:
         for output_attribute in reg.output_attributes:
             self.uv_bot.elements[output_attribute] = df_bot[output_attribute]
 
-    def plot_3d(self, result_name):
-        fig = plt.figure(1, figsize=(18, 10))
+    def plot_3d(self, result_name, figsize=None):
+        if figsize is None:
+            figsize = (18, 10)
+        fig = plt.figure(1, figsize=figsize)
         ax = fig.add_subplot(111, projection="3d")
         c_bot = ax.plot_trisurf(self.uv_bot.nodes.x, self.uv_bot.nodes.y, self.uv_bot.nodes.z,
                                 triangles=self.uv_bot.elements.simplices.tolist(), cmap=plt.cm.Spectral_r,

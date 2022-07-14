@@ -74,7 +74,6 @@ param_bot = {
 st_range = {}
 
 for prozess_parameter_name in param_clamp.keys():
-    print(prozess_parameter_name)
     value, min_value, max_value = param_clamp[prozess_parameter_name]
     st_range[prozess_parameter_name] = st.sidebar.slider(prozess_parameter_name,
                                                          min_value=min_value,
@@ -121,6 +120,8 @@ for pname, pvalue in st_range.items():
 st_elsize = st.sidebar.selectbox("grid resolution", uvgrids,
                                             index=uvgrids.index("0.0200"))
 
+
+st.sidebar.image("positions.png")
 
 #st.write(st_param)
 elsize = float(st_elsize)

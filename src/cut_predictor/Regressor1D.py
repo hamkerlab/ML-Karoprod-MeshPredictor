@@ -88,6 +88,7 @@ class CutPredictor(Predictor):
             print("ERROR: positions must be a single integer.")
             return
 
+        attr = self.position_attributes[0]
         samples = np.linspace(self.min_values[attr], self.max_values[attr], positions)
 
         X = np.empty((positions, 0))

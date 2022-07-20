@@ -781,7 +781,7 @@ class Predictor(object):
     ## Optimization
     #############################################################################################
 
-    def optimize(self, objective, positions, nb_trials, fixed={}):
+    def optimize(self, objective, positions, nb_trials, fixed={}, as_df=False):
         """
         Returns the process parameters that minimize the provided objective function.
 
@@ -794,14 +794,27 @@ class Predictor(object):
         params = reg.optimize(mean_deviation, positions=100, nb_trials=1000)
         ```
 
+        Alternative, a dataframe with input and output variables can be passed to the function if `as_df` is True.
+
+        ```python
+        def mean_deviation(df):
+            return df['deviation'].to_numpy().mean()
+
+        params = reg.optimize(mean_deviation, positions=100, nb_trials=1000)
+        ```
+
+
         :param objective: objective function to be minimized.
         :param positions: input positions for the prediction. Must be the same as for `predict()` depending on the class.
         :param nb_trials: number of optimization trials.
         :param fixed: dictionary containing fixed values of the process parameters that should not be optimized.
+        :param as_df: whether the objective function takes x,y or df as an input.
         """
         self._optimize_function = objective
         self._optimize_positions = positions
         self._optimize_fixed = fixed
+        self._optimize_as_df = as_df
+
 
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         self.study = optuna.create_study(direction='minimize')
@@ -836,8 +849,13 @@ class Predictor(object):
             else:
                 process_parameters[attr] = trial.suggest_float(attr, self.min_values[attr], self.max_values[attr])
 
-        x, y = self.predict(process_parameters, self._optimize_positions)
+        if not self._optimize_as_df:
+            x, y = self.predict(process_parameters, self._optimize_positions, as_df=self._optimize_as_df)
 
-        res = self._optimize_function(x, y)
+            res = self._optimize_function(x, y)
+        else:
+            df = self.predict(process_parameters, self._optimize_positions, as_df=self._optimize_as_df)
+
+            res = self._optimize_function(df)
 
         return res

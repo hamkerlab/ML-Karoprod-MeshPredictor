@@ -140,7 +140,7 @@ class CutPredictor(Predictor):
         if as_df:
             d = pd.DataFrame()
             for i, attr in enumerate(self.position_attributes):
-                d[attr] = samples[:, i]
+                d[attr] = samples
             for i, attr in enumerate(self.output_attributes):
                 d[attr] = y[:, i]
             return d

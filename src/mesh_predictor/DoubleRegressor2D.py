@@ -3,6 +3,7 @@ import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import optuna
 
 from .Predictor import Predictor
 from .Predictor import NpEncoder
@@ -719,4 +720,119 @@ class DoubleProjectionPredictor(Predictor):
             s=0.001
         )
 
- 
+    #############################################################################################
+    ## Optimization
+    #############################################################################################
+
+    def optimize(self, objective, positions, nb_trials, fixed={}, as_df=False):
+        """
+        Returns the process parameters that minimize the provided objective function.
+
+        The objective function must take two parameters `x` and `y` where `x` are input positions and `y` the predictions. It must return one value, the "cost" of that simulation.
+
+        ```python
+        def mean_deviation(x, y):
+            return y[:, 0].mean()
+
+        params = reg.optimize(mean_deviation, positions=100, nb_trials=1000)
+        ```
+
+        Alternative, a dataframe with input and output variables can be passed to the function if `as_df` is True.
+
+        ```python
+        def mean_deviation(df):
+            return df['deviation'].to_numpy().mean()
+
+        params = reg.optimize(mean_deviation, positions=100, nb_trials=1000)
+        ```
+
+
+        :param objective: objective function to be minimized.
+        :param positions: input positions for the prediction. Must be the same as for `predict()` depending on the class.
+        :param nb_trials: number of optimization trials.
+        :param fixed: dictionary containing fixed values of the process parameters that should not be optimized.
+        :param as_df: whether the objective function takes x,y or df as an input.
+        """
+        self._optimize_function = objective
+        self._optimize_positions = positions
+        self._optimize_fixed = fixed
+        self._optimize_as_df = as_df
+
+
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        self.study = optuna.create_study(direction='minimize')
+        self.study.optimize(self._optimize, n_trials=nb_trials, show_progress_bar=True)
+
+        pp = {}
+        for attr in self.process_parameters_joining:
+            if attr in fixed.keys():
+                pp[attr] = fixed[attr]
+        for attr in self.process_parameters_single:
+            if attr in fixed.keys():
+                pp[attr + '_top'] = fixed[attr]
+                pp[attr + '_bot'] = fixed[attr]
+            elif attr + '_top' in fixed.keys():
+                pp[attr + '_top'] = fixed[attr + '_top']
+                pp[attr + '_bot'] = fixed[attr + '_bot']
+        
+        pp.update(self.study.best_params)
+
+        print("Best parameters:", pp)
+        print("Achieved objective:", self.study.best_value)
+
+        return pp
+
+    def _optimize(self, trial):
+
+        process_parameters = {}
+
+        for attr in self.process_parameters_joining:
+
+            if attr in self._optimize_fixed.keys():
+                process_parameters[attr] = self._optimize_fixed[attr]
+                continue
+
+            if attr in self.categorical_attributes:
+
+                values = self.categorical_values[attr]
+                for i, v in enumerate(values):
+                    if isinstance(v, np.int64):
+                        values[i] = int(v)
+
+                process_parameters[attr] = trial.suggest_categorical(attr, values)
+            else:
+                process_parameters[attr] = trial.suggest_float(attr, self.min_values[attr], self.max_values[attr])
+
+        for suffix in ['_top', '_bot']:
+            for attr in self.process_parameters_single:
+
+                if attr in self._optimize_fixed.keys():
+                    process_parameters[attr+suffix] = self._optimize_fixed[attr]
+                    continue
+                elif attr + suffix in self._optimize_fixed.keys():
+                    process_parameters[attr+suffix] = self._optimize_fixed[attr + suffix]
+                    continue
+
+
+                if attr in self.categorical_attributes:
+
+                    values = self.categorical_values[attr]
+                    for i, v in enumerate(values):
+                        if isinstance(v, np.int64):
+                            values[i] = int(v)
+
+                    process_parameters[attr+suffix] = trial.suggest_categorical(attr+suffix, values)
+                else:
+                    process_parameters[attr+suffix] = trial.suggest_float(attr+suffix, self.min_values[attr], self.max_values[attr])
+
+        if not self._optimize_as_df:
+
+            x, y = self.predict(process_parameters, self._optimize_positions, as_df=self._optimize_as_df)
+
+            res = self._optimize_function(x, y)
+        else:
+            df = self.predict(process_parameters, self._optimize_positions, as_df=self._optimize_as_df)
+
+            res = self._optimize_function(df)
+
+        return res

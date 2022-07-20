@@ -1,4 +1,4 @@
-site_name: Banana predictor
+site_name: Mesh predictor
 
 theme:
   name: material
@@ -55,6 +55,7 @@ nav:
     - 'CutPredictor.md'
     - 'ProjectionPredictor.md'
     - 'MeshPredictor.md'
+    - 'DoubleProjectionPredictor.md'
   - Examples:
     - 'Cut_x0.ipynb'
     - 'Cut_web.ipynb'

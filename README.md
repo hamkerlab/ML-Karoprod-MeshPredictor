@@ -1,4 +1,4 @@
-# Banana predictor
+# Mesh predictor
 
 Tensorflow and optuna-based utility to learn to predict several quantities (position, deviation, thickness) based on a set of process parameters of FEM experiments.
 

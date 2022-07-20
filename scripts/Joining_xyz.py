@@ -7,7 +7,7 @@ doe_joining = pd.read_csv('../data/doe_joining.csv')
 data = pd.read_csv('../data/joining.csv')
 
 
-from cut_predictor import DoubleProjectionPredictor
+from mesh_predictor import DoubleProjectionPredictor
 
 reg = DoubleProjectionPredictor()
 

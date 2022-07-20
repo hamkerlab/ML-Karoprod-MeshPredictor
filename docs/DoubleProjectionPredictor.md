@@ -1,7 +1,7 @@
 # DoubleProjectionPredictor
 
 
-::: cut_predictor.DoubleProjectionPredictor
+::: mesh_predictor.DoubleProjectionPredictor
     handler: python
     rendering:
       show_root_heading: true

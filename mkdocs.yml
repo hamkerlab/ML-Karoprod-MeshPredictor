@@ -20,7 +20,7 @@ plugins:
   - mkdocstrings:
       default_handler: python
       watch:
-        - src/cut_predictor
+        - src/mesh_predictor
       handlers:
         python:
           selection:

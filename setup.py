@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name='cut_predictor',
+    name='mesh_predictor',
     version='1.0.0',
     author='Aida Farahani, Payam Atoofi, Julien Vitay',
     author_email='julien.vitay@informatik.tu-chemnitz.de ',

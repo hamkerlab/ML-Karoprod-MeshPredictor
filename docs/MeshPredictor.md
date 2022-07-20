@@ -1,7 +1,7 @@
 # MeshPredictor
 
 
-::: cut_predictor.MeshPredictor
+::: mesh_predictor.MeshPredictor
     handler: python
     rendering:
       show_root_heading: true

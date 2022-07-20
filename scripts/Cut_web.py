@@ -10,7 +10,7 @@ data.drop(data[data.doe_id == 1000].index, inplace=True)
 data.drop(data[data.doe_id == 247].index, inplace=True)
 
 
-from cut_predictor import CutPredictor
+from mesh_predictor import CutPredictor
 
 reg = CutPredictor()
 

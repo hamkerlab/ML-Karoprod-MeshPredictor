@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from cut_predictor import ProjectionPredictor
+from mesh_predictor import ProjectionPredictor
 
 
 doe = pd.read_csv('../data/doe.csv')

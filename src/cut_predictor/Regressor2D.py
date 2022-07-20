@@ -179,6 +179,14 @@ class ProjectionPredictor(Predictor):
         for idx, attr in enumerate(self.output_attributes):
             t[:, idx] = self._rescale_output(attr, t[:, idx])
 
+        positions = []
+        for i, attr in enumerate(self.position_attributes):
+            if self.position_scaler == 'normal':
+                values = self.mean_values[attr] + X[:, i-2] * self.std_values[attr]
+            else:
+                values = self.min_values[attr] +  X[:, i-2] * (self.max_values[attr] - self.min_values[attr])
+            positions.append(values)
+        positions=np.array(positions)
 
         y = self.model.predict(X, batch_size=self.batch_size)
 
@@ -201,6 +209,7 @@ class ProjectionPredictor(Predictor):
             plt.title("Prediction - " + attr)
             plt.tight_layout()
 
+        return positions, t, y
 
 
     def compare_xyz(self, doe_id):
@@ -227,6 +236,15 @@ class ProjectionPredictor(Predictor):
         for idx, attr in enumerate(self.output_attributes):
             t[:, idx] = self._rescale_output(attr, t[:, idx])
 
+        positions = []
+        for i, attr in enumerate(self.position_attributes):
+            if self.position_scaler == 'normal':
+                values = self.mean_values[attr] + X[:, i-2] * self.std_values[attr]
+            else:
+                values = self.min_values[attr] +  X[:, i-2] * (self.max_values[attr] - self.min_values[attr])
+            positions.append(values)
+        positions=np.array(positions)
+
         y = self.model.predict(X, batch_size=self.batch_size)
 
         for idx, attr in enumerate(self.output_attributes):
@@ -250,4 +268,6 @@ class ProjectionPredictor(Predictor):
             y[:, 2],
             s=0.005
         )
+
+        return positions, t, y
  

@@ -714,7 +714,7 @@ class Predictor(object):
         :param doe_id: id of the experiment.
         """
 
-        self._compare(doe_id)
+        return self._compare(doe_id)
 
     def interactive(self, function, positions):
         """

@@ -114,17 +114,12 @@ class MeshPredictor(Predictor):
             X = np.concatenate((X, values.reshape((nb_points, 1))), axis=1)
 
 
-        y = self.model.predict(X, batch_size=self.batch_size).reshape((nb_points, len(self.output_attributes)))
+        y = self.model.predict(X, batch_size=self.batch_size)
 
-        result = np.empty((nb_points, 0))
 
         for idx, attr in enumerate(self.output_attributes):
             
-            result = np.concatenate(
-                (result, 
-                 self._rescale_output(attr, y[:, idx]).reshape((nb_points, 1))
-                 ), axis=1
-            )
+            y[:, idx] = self._rescale_output(attr, y[:, idx])
 
         # Return inputs and outputs
         if as_df:
@@ -132,11 +127,11 @@ class MeshPredictor(Predictor):
             for i, attr in enumerate(self.position_attributes):
                 d[attr] = positions[:, i]
             for i, attr in enumerate(self.output_attributes):
-                d[attr] = result[:, i]
+                d[attr] = y[:, i]
             return d
 
         else:
-            return positions, result
+            return positions, y
 
 
     def _compare(self, doe_id):
@@ -155,6 +150,15 @@ class MeshPredictor(Predictor):
         
         for idx, attr in enumerate(self.output_attributes):
             t[:, idx] = self._rescale_output(attr, t[:, idx])
+
+        positions = []
+        for i, attr in enumerate(self.position_attributes):
+            if self.position_scaler == 'normal':
+                values = self.mean_values[attr] + X[:, i-3] * self.std_values[attr]
+            else:
+                values = self.min_values[attr] +  X[:, i-3] * (self.max_values[attr] - self.min_values[attr])
+            positions.append(values)
+        positions=np.array(positions)
 
 
         y = self.model.predict(X, batch_size=self.batch_size)
@@ -182,5 +186,5 @@ class MeshPredictor(Predictor):
             ax.set_title("Prediction - " + attr)
 
 
-
+        return positions, t, y
         

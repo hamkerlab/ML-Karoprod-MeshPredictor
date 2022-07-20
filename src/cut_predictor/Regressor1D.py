@@ -167,8 +167,11 @@ class CutPredictor(Predictor):
             t[:, idx] = self._rescale_output(attr, t[:, idx])
 
 
-        for attr in self.position_attributes:
-            position = self.mean_values[attr] +  self.std_values[attr] * X[:, -1] # position is the last index
+        for i, attr in enumerate(self.position_attributes):
+            if self.position_scaler == 'normal':
+                position = self.mean_values[attr] + X[:, -1] * self.std_values[attr]
+            else:
+                position = self.min_values[attr] +  X[:, -1] * (self.max_values[attr] - self.min_values[attr])
 
         y = self.model.predict(X, batch_size=self.batch_size)
 
@@ -183,4 +186,6 @@ class CutPredictor(Predictor):
             plt.ylabel(attr)
             plt.ylim((self.min_values[attr], self.max_values[attr]))
             plt.legend()
+
+        return position, t, y
 

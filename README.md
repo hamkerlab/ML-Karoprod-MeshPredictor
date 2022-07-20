@@ -4,7 +4,7 @@ Tensorflow and optuna-based utility to learn to predict several quantities (posi
 
 ![](docs/sliders.png)
 
-The documentation is at <https://hamkerlab.github.io/ML-Karoprod-CutPredictor/>. 
+The documentation is at <https://hamkerlab.github.io/ML-Karoprod-MeshPredictor/>. 
 
 ## Installation
 
@@ -19,7 +19,7 @@ Dependencies:
 * h5py
 
 ```bash
-pip install git+https://github.com/hamkerlab/ML-Karoprod-CutPredictor.git@master
+pip install git+https://github.com/hamkerlab/ML-Karoprod-MeshPredictor.git@master
 ```
 
 ## Documentation

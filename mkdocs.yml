@@ -13,7 +13,7 @@ theme:
     repo: fontawesome/brands/github
 
 copyright: Copyright &copy; 2022 Aida Farahani, Payam Atoofi, Julien Vitay
-repo_url: https://github.com/hamkerlab/ML-Karoprod-CutPredictor
+repo_url: https://github.com/hamkerlab/ML-Karoprod-MeshPredictor
 
 plugins:
   - search

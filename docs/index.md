@@ -17,6 +17,6 @@ Dependencies:
 * optuna
 
 ```bash
-pip install git+https://github.com/hamkerlab/ML-Karoprod-CutPredictor.git@master
+pip install git+https://github.com/hamkerlab/ML-Karoprod-MeshPredictor.git@master
 ```
 

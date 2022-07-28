@@ -1658,7 +1658,25 @@
 <span class="normal">840</span>
 <span class="normal">841</span>
 <span class="normal">842</span>
-<span class="normal">843</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">Predictor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="normal">843</span>
+<span class="normal">844</span>
+<span class="normal">845</span>
+<span class="normal">846</span>
+<span class="normal">847</span>
+<span class="normal">848</span>
+<span class="normal">849</span>
+<span class="normal">850</span>
+<span class="normal">851</span>
+<span class="normal">852</span>
+<span class="normal">853</span>
+<span class="normal">854</span>
+<span class="normal">855</span>
+<span class="normal">856</span>
+<span class="normal">857</span>
+<span class="normal">858</span>
+<span class="normal">859</span>
+<span class="normal">860</span>
+<span class="normal">861</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">Predictor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for the predictors: Cutpredictor, ProjectionPredictor and MeshPredictor.</span>
 
@@ -2405,7 +2423,7 @@
     <span class="c1">## Optimization</span>
     <span class="c1">#############################################################################################</span>
 
-    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objective</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">nb_trials</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objective</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">nb_trials</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="p">{},</span> <span class="n">as_df</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the process parameters that minimize the provided objective function.</span>
 
@@ -2418,14 +2436,27 @@
 <span class="sd">        params = reg.optimize(mean_deviation, positions=100, nb_trials=1000)</span>
 <span class="sd">        ```</span>
 
+<span class="sd">        Alternative, a dataframe with input and output variables can be passed to the function if `as_df` is True.</span>
+
+<span class="sd">        ```python</span>
+<span class="sd">        def mean_deviation(df):</span>
+<span class="sd">            return df[&#39;deviation&#39;].to_numpy().mean()</span>
+
+<span class="sd">        params = reg.optimize(mean_deviation, positions=100, nb_trials=1000)</span>
+<span class="sd">        ```</span>
+
+
 <span class="sd">        :param objective: objective function to be minimized.</span>
 <span class="sd">        :param positions: input positions for the prediction. Must be the same as for `predict()` depending on the class.</span>
 <span class="sd">        :param nb_trials: number of optimization trials.</span>
 <span class="sd">        :param fixed: dictionary containing fixed values of the process parameters that should not be optimized.</span>
+<span class="sd">        :param as_df: whether the objective function takes x,y or df as an input.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_function</span> <span class="o">=</span> <span class="n">objective</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_positions</span> <span class="o">=</span> <span class="n">positions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_fixed</span> <span class="o">=</span> <span class="n">fixed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_as_df</span> <span class="o">=</span> <span class="n">as_df</span>
+
 
         <span class="n">optuna</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="n">optuna</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">study</span> <span class="o">=</span> <span class="n">optuna</span><span class="o">.</span><span class="n">create_study</span><span class="p">(</span><span class="n">direction</span><span class="o">=</span><span class="s1">&#39;minimize&#39;</span><span class="p">)</span>
@@ -2460,9 +2491,14 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">process_parameters</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">suggest_float</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_values</span><span class="p">[</span><span class="n">attr</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_values</span><span class="p">[</span><span class="n">attr</span><span class="p">])</span>
 
-        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">process_parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_positions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_as_df</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">process_parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_positions</span><span class="p">,</span> <span class="n">as_df</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimize_as_df</span><span class="p">)</span>
 
-        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">process_parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_positions</span><span class="p">,</span> <span class="n">as_df</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimize_as_df</span><span class="p">)</span>
+
+            <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_function</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">res</span>
 </code></pre></div>
@@ -3962,7 +3998,7 @@
 
 
 <h4 id="mesh_predictor.Predictor.Predictor.optimize" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">optimize</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">nb_trials</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="p">{})</span></code>
+<code class="highlight language-python"><span class="n">optimize</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">nb_trials</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="p">{},</span> <span class="n">as_df</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
 
 
 <a href="#mesh_predictor.Predictor.Predictor.optimize" class="headerlink" title="Permanent link">#</a></h4>
@@ -3974,6 +4010,12 @@
 <p>The objective function must take two parameters <code>x</code> and <code>y</code> where <code>x</code> are input positions and <code>y</code> the predictions. It must return one value, the "cost" of that simulation.</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">mean_deviation</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="n">params</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">mean_deviation</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">nb_trials</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</code></pre></div>
+<p>Alternative, a dataframe with input and output variables can be passed to the function if <code>as_df</code> is True.</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">mean_deviation</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;deviation&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
 <span class="n">params</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">mean_deviation</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">nb_trials</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 </code></pre></div>
@@ -4025,6 +4067,15 @@
                 <code>{}</code>
           </td>
         </tr>
+        <tr>
+          <td><code>as_df</code></td>
+          <td>
+          </td>
+          <td><p>whether the objective function takes x,y or df as an input.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
     </tbody>
   </table>
 
@@ -4062,7 +4113,20 @@
 <span class="normal">813</span>
 <span class="normal">814</span>
 <span class="normal">815</span>
-<span class="normal">816</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objective</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">nb_trials</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="p">{}):</span>
+<span class="normal">816</span>
+<span class="normal">817</span>
+<span class="normal">818</span>
+<span class="normal">819</span>
+<span class="normal">820</span>
+<span class="normal">821</span>
+<span class="normal">822</span>
+<span class="normal">823</span>
+<span class="normal">824</span>
+<span class="normal">825</span>
+<span class="normal">826</span>
+<span class="normal">827</span>
+<span class="normal">828</span>
+<span class="normal">829</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objective</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">nb_trials</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="p">{},</span> <span class="n">as_df</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns the process parameters that minimize the provided objective function.</span>
 
@@ -4075,14 +4139,27 @@
 <span class="sd">    params = reg.optimize(mean_deviation, positions=100, nb_trials=1000)</span>
 <span class="sd">    ```</span>
 
+<span class="sd">    Alternative, a dataframe with input and output variables can be passed to the function if `as_df` is True.</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    def mean_deviation(df):</span>
+<span class="sd">        return df[&#39;deviation&#39;].to_numpy().mean()</span>
+
+<span class="sd">    params = reg.optimize(mean_deviation, positions=100, nb_trials=1000)</span>
+<span class="sd">    ```</span>
+
+
 <span class="sd">    :param objective: objective function to be minimized.</span>
 <span class="sd">    :param positions: input positions for the prediction. Must be the same as for `predict()` depending on the class.</span>
 <span class="sd">    :param nb_trials: number of optimization trials.</span>
 <span class="sd">    :param fixed: dictionary containing fixed values of the process parameters that should not be optimized.</span>
+<span class="sd">    :param as_df: whether the objective function takes x,y or df as an input.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_function</span> <span class="o">=</span> <span class="n">objective</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_positions</span> <span class="o">=</span> <span class="n">positions</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_fixed</span> <span class="o">=</span> <span class="n">fixed</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_as_df</span> <span class="o">=</span> <span class="n">as_df</span>
+
 
     <span class="n">optuna</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="n">optuna</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">study</span> <span class="o">=</span> <span class="n">optuna</span><span class="o">.</span><span class="n">create_study</span><span class="p">(</span><span class="n">direction</span><span class="o">=</span><span class="s1">&#39;minimize&#39;</span><span class="p">)</span>
